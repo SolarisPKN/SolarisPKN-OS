@@ -1,0 +1,11 @@
+dist/
+*.ko
+*.o
+*.mod
+*.mod.c
+*.cmd
+Module.symvers
+modules.order
+*.rpm
+*.deb
+*.sig
