@@ -1,0 +1,36 @@
+name: SolarisPKN-Verity source package
+
+on:
+  push:
+    paths:
+      - 'solarispkn-verity/**'
+      - '.github/workflows/solarispkn-verity.yml'
+  pull_request:
+    paths:
+      - 'solarispkn-verity/**'
+      - '.github/workflows/solarispkn-verity.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  source-package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out SolarisPKN-OS
+        uses: actions/checkout@v4
+      - name: Validate standalone Verity packaging
+        run: make -C solarispkn-verity check package
+      - name: Inspect source archive contents
+        run: |
+          set -eu
+          test -f solarispkn-verity/dist/solarispkn-verity-0.1.0-dev.tar.gz
+          tar -tzf solarispkn-verity/dist/solarispkn-verity-0.1.0-dev.tar.gz | grep -q '^solarispkn-verity/README.md$'
+          tar -tzf solarispkn-verity/dist/solarispkn-verity-0.1.0-dev.tar.gz | grep -q '^solarispkn-verity/LICENSE$'
+      - name: Upload source package
+        uses: actions/upload-artifact@v4
+        with:
+          name: solarispkn-verity-source
+          path: solarispkn-verity/dist/*.tar.gz
+          if-no-files-found: error
