@@ -1,0 +1,5 @@
+#!/bin/sh
+# SPDX-License-Identifier: MIT
+set -e
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
+exec env PYTHONPATH="$HERE" python3 -m solarispkn_verity.cli "$@"

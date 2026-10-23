@@ -1,0 +1,169 @@
+{
+  "version": "0.6.0-rc1",
+  "status": "source-only experimental",
+  "files": [
+    {
+      "path": ".gitignore",
+      "bytes": 327,
+      "sha256": "592c5e54dcdc81f7fca0dccefa1d2db3ed175a7287bd659868323eb7bb566111"
+    },
+    {
+      "path": "README.md",
+      "bytes": 3082,
+      "sha256": "5afb56ee69fa8f21b5c84fa6fbf2565a7a04704c3216eff3ec1ecda70d10cea5"
+    },
+    {
+      "path": "RELEASE-STATUS.md",
+      "bytes": 1679,
+      "sha256": "0ead4a9c9e537b6afb6d3286f7f76c97ca28bac6c5c7cf92b14969dcdf15f68f"
+    },
+    {
+      "path": "THIRD_PARTY.md",
+      "bytes": 878,
+      "sha256": "1516ea6536d9c7d41cd7ec35aeec03cebfa9495e4287a4678a0415296f57f1bb"
+    },
+    {
+      "path": "VERSION",
+      "bytes": 10,
+      "sha256": "34c9b33b2af56b479f38db8c637dfcd2d542a4b2cdf0f47ca2c159ef2ecac994"
+    },
+    {
+      "path": "cli/.gitignore",
+      "bytes": 182,
+      "sha256": "4f07b89fa5ee8d734cf0ef501f106c53d7c631fa7558db9ad5e12f8597ed9658"
+    },
+    {
+      "path": "cli/bin/solarispkn-verity",
+      "bytes": 167,
+      "sha256": "4579b371039b7472ba8e216cac807783a00a86da566464a9d45d564eb98a02a3"
+    },
+    {
+      "path": "cli/pyproject.toml",
+      "bytes": 525,
+      "sha256": "7eb77c0ac49fa4fba42a2c0594595e94e7857d12733cd116ab0bf3e38a7bdb92"
+    },
+    {
+      "path": "cli/solarispkn_verity/__init__.py",
+      "bytes": 63,
+      "sha256": "d36d9781ebeadc6f8f6510659afbb6715a381246eaf4291e785ac76a2d6acb1f"
+    },
+    {
+      "path": "cli/solarispkn_verity/cli.py",
+      "bytes": 5022,
+      "sha256": "f1523c8179a8a8e15c08ad29810ee56332fa7c6b4528ae6a13f402a21896fdbe"
+    },
+    {
+      "path": "cli/solarispkn_verity/image.py",
+      "bytes": 10869,
+      "sha256": "a9f8a2813e6747198a877a5773f1aa25b0c9ff8b4b6da958a8244ca579cdc70a"
+    },
+    {
+      "path": "cli/tests/test_verity_image.py",
+      "bytes": 2048,
+      "sha256": "31ccfc809ef3f4422424f61a307ad29a2e40a37fa065669354c530b253c94d99"
+    },
+    {
+      "path": "cli/tools/verity_image.py",
+      "bytes": 10869,
+      "sha256": "a9f8a2813e6747198a877a5773f1aa25b0c9ff8b4b6da958a8244ca579cdc70a"
+    },
+    {
+      "path": "docs/QA-2026-10-23.md",
+      "bytes": 995,
+      "sha256": "69c6c7fc47cde7ca117c31e89ec82a0f81876bf9bad616b82dbc138d81a52302"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/conf/layer.conf",
+      "bytes": 324,
+      "sha256": "94b571de4c837039630c495ecdee8c0b4610a2ccac40cafa45934ea0e1411c81"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/blake3-solarispkn_0.1.bb",
+      "bytes": 858,
+      "sha256": "368b5714409d1ac157ebbefe4a44337abf5719a50261d25f585455d0b4d73873"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/LICENSE_CC0",
+      "bytes": 7048,
+      "sha256": "a2010f343487d3f7618affe54f789f5487602331c0a8d03f49e9a7c547cf0499"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/Makefile",
+      "bytes": 540,
+      "sha256": "9baedec9a512e8a170297790590dff0e0bb8efbbe8e744248ed342faba52996d"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3.c",
+      "bytes": 28899,
+      "sha256": "a3ec3f14f6c3533466d6d13a5aa2894e1424e800f49d105c18f5d8489667bf10"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3.h",
+      "bytes": 2916,
+      "sha256": "582c9acb78a5aa63e3e8ae69d7cc309d5b085e8e6e3bc07f80246e2f92551374"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3_avx2_x86-64_unix.S",
+      "bytes": 66094,
+      "sha256": "94abe6b193ebee97709558140408123167a9066b6b4a3d8ec5f83959acf24712"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3_avx512_x86-64_unix.S",
+      "bytes": 161784,
+      "sha256": "361eb541349ca7599762d7d7765deb2fb42a232cbd6ff0656ab6559747c04256"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3_dispatch_kernel.c",
+      "bytes": 5166,
+      "sha256": "c42a7d3648242c7f9debe53438c5455acb6c81e9bd87b3a34d678b359587a0da"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3_impl.h",
+      "bytes": 11978,
+      "sha256": "acaf213af2a61453178ef28a0640fb3db776b1d15734f02a16bbf9290219b6e3"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3_portable.c",
+      "bytes": 5901,
+      "sha256": "bb119748ec083465841ada9b0d499a967ab4e12ac1d0bb75fcdd4850cb9b301e"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3_sse2_x86-64_unix.S",
+      "bytes": 68940,
+      "sha256": "98eda8efd056dfddab9e95e755e8933b974aebaf4dcfed5c52a381928646b066"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3_sse41_x86-64_unix.S",
+      "bytes": 61225,
+      "sha256": "d71e2255869aa2f335c961495b9146e257c5252ac305dbe4d040b21cd5539d9a"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/spkn_blake3_shash.c",
+      "bytes": 7318,
+      "sha256": "62e6641603a3de66a59580e2c44d2e526f1b121606500b4bef57f5891159a18d"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/spkn_kernel_compat.h",
+      "bytes": 352,
+      "sha256": "2f3b1a942c19e3d0c1191858e5c9753ebd414d22e4f94f5179a0f7b1a7279db4"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-tests/afalg-test/KAT-PROVENANCE.md",
+      "bytes": 496,
+      "sha256": "6637d2d409dea42e12b7a0080a1ea117ecac8c183a9b2ca03c55bb9aef984d7e"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-tests/afalg-test/files/spkn-afalg-test.c",
+      "bytes": 2479,
+      "sha256": "65e3fdba8a2ef2151b752d1c423591d801e39cc67f6eba5441ad117ff0b0b73e"
+    },
+    {
+      "path": "integrations/yocto/meta-solarispkn-crypto/recipes-tests/afalg-test/solarispkn-afalg-test_0.1.bb",
+      "bytes": 579,
+      "sha256": "708a411a0bd0c6d11564b0d3da56449dcc35bc2372aff6c8be546af4e2392d58"
+    }
+  ],
+  "raw_evidence_included": false,
+  "uefi_secure_boot_validated": false,
+  "avx512_isa_executed": false
+}

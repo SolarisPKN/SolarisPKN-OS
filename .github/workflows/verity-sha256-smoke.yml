@@ -1,0 +1,39 @@
+name: SolarisPKN-Verity SHA-256 smoke
+
+on:
+  push:
+    paths:
+      - 'solarispkn-verity/**'
+      - '.github/workflows/verity-sha256-smoke.yml'
+  pull_request:
+    paths:
+      - 'solarispkn-verity/**'
+      - '.github/workflows/verity-sha256-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sha256-userspace:
+    # BLAKE3 and dm-verity kernel mapping are NOT tested by this job.
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build experimental AF_ALG tree generator
+        run: |
+          set -eu
+          make -C solarispkn-verity check-source
+          make -C solarispkn-verity/tools/verity-tree
+      - name: Verify unprivileged SHA-256 Merkle behavior
+        run: |
+          set -eu
+          id
+          sh solarispkn-verity/tests/test-sha256-unprivileged.sh
+      - name: Explain coverage
+        run: |
+          echo 'PASS here means only SHA-256 userspace format/verify was exercised.'
+          echo 'Still required: independent cryptsetup parity, BLAKE3 official vectors,'
+          echo 'kernel dm-verity corruption/EIO, QEMU/OVMF signed boot and root authentication.'

@@ -1,4 +1,7 @@
 dist/
+build/
+__pycache__/
+*.py[cod]
 *.ko
 *.o
 *.mod
@@ -9,3 +12,21 @@ modules.order
 *.rpm
 *.deb
 *.sig
+*.key
+*.pem
+*.p12
+*.pfx
+*.p7s
+*.ext4
+*.qcow2
+*.cpio
+*.cpio.gz
+*.img
+*.log
+.env
+.env.*
+!.env.example
+**/private-keys/
+**/secrets/
+# Userspace Merkle utility compiled locally
+/tools/verity-tree/solarispkn-verity-tree

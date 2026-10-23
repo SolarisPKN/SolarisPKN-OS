@@ -3,7 +3,7 @@
 ## v0.1 — provenance and kernel compatibility
 - [x] Independent GPL-2.0-only folder under SolarisPKN-OS
 - [x] Source archive packaging and upstream credits
-- [x] Yocto Scarthgap layer skeleton (no recipes yet)
+- [x] Yocto Scarthgap layer skeleton (experimental userspace tool recipe locally added; no kernel-driver recipe)
 - [ ] Review original rights and upstream licenses before copying any lab code
 - [ ] Pin upstream BLAKE3 source and validate known-answer vectors
 - [ ] Implement safe Linux Crypto API shash state handling, allocation and export/import

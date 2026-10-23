@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=65"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "solarispkn-verity"
+version = "0.6.0rc1"
+description = "Experimental dm-verity Merkle / detached root hash PKCS7 tooling"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "SolarisPKN" }]
+dependencies = []
+
+[project.optional-dependencies]
+blake3 = ["blake3>=1.0"]
+
+[project.scripts]
+solarispkn-verity = "solarispkn_verity.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["solarispkn_verity*"]
