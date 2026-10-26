@@ -2,6 +2,15 @@
 
 **Estado / Status:** 0.6.0-rc1 — experimental source preview. **Not production ready.**
 
+## Evidencia funcional / Functional evidence
+
+- **[Compatibilidad, árbol Merkle, correcciones y pruebas (ES)](docs/INTEGRATION-AND-REGRESSIONS.es.md)**
+- **[Compatibility, Merkle tree, fixes and tests (EN)](docs/INTEGRATION-AND-REGRESSIONS.en.md)**
+- [Visual integrity flow / Diagrama animado](docs/assets/merkle-integrity.svg)
+- Run the offline functional regression suite: `python3 -m unittest discover -s cli/tests -p 'test_verity*.py' -v` (optional Python `blake3` module required for BLAKE3-specific cases).
+
+**Public boundary:** source code and functional interoperability/integrity evidence only. Throughput, benchmark, host load, latency and private experimental logs are intentionally maintained outside this repository.
+
 ## Español
 
 Integra BLAKE3 en la **Linux Crypto API (shash)** como módulo externo, reutilizando
@@ -20,42 +29,41 @@ para root hash/firma y pruebas de vectores a través de AF_ALG.
   versión anterior, NO esta combinación final. UEFI Secure Boot completo
   sigue pendiente, al igual que ARM64/RISC-V.
 
-Esta versión es para investigación, integración y benchmarks preliminares
-cuando se libere la PC; **no la uses para proteger datos de producción**.
+Esta versión es para investigación y validación funcional en entornos aislados;
+**no la uses para proteger datos de producción**.
 
 ### Organización
 
-- \`integrations/yocto/meta-solarispkn-crypto/\`: código BLAKE3 + receta del módulo
+- `integrations/yocto/meta-solarispkn-crypto/`: código BLAKE3 + receta del módulo
   y tests AF_ALG (experimental, kernels Yocto Linux 6.18).
-- \`integrations/yocto/meta-solarispkn-verity/\`: integración independiente de la
+- `integrations/yocto/meta-solarispkn-verity/`: integración independiente de la
   herramienta Merkle/dm-verity, conservada del repositorio existente.
-- \`cli/\`: utilidades Python experimentales, \`pyproject.toml\` y tests.
-- \`tools/verity-tree/\`: generador Merkle basado en AF_ALG existente.
-- \`docs/QA-2026-10-23.md\`: alcance de las pruebas, limitaciones y pasos pendientes.
-- \`RELEASE-STATUS.md\`: requisitos antes de producción.
-- \`THIRD_PARTY.md\`: procedencia y licencias.
+- `cli/`: utilidades Python experimentales, `pyproject.toml` y tests.
+- `tools/verity-tree/`: generador Merkle basado en AF_ALG existente.
+- `docs/QA-2026-10-23.md`: alcance de las pruebas, limitaciones y pasos pendientes.
+- `RELEASE-STATUS.md`: requisitos antes de producción.
+- `THIRD_PARTY.md`: procedencia y licencias.
 
-**Compilación:** usa un kernel Linux 6.18 preparado con \`Module.symvers\`,
-\`bitbake\`/Yocto y el toolchain que compila ese kernel. \`dm-verity\` requiere
+**Compilación:** usa un kernel Linux 6.18 preparado con `Module.symvers`,
+`bitbake`/Yocto y el toolchain que compila ese kernel. `dm-verity` requiere
 un root hash autenticado y una cadena de confianza de arranque; el módulo
 BLAKE3 por sí solo no la proporciona.
 
 ## English
 
-Experimental BLAKE3 \`shash\` kernel Crypto API provider for upstream
-\`dm-verity\`, with a Yocto Wrynose recipe, Merkle tooling and AF_ALG tests.
+Experimental BLAKE3 `shash` kernel Crypto API provider for upstream
+`dm-verity`, with a Yocto Wrynose recipe, Merkle tooling and AF_ALG tests.
 Portable, SSE2, SSE4.1 and AVX2 passed QEMU KATs; AVX-512 was compiled,
 but only its unsupported-CPU fallback was exercised. KASAN/ENOMEM and
 concurrent digest smoke tests passed on a bounded test suite.
 
 This is **not an upstream Linux patch**, nor a verified UEFI Secure Boot
 release; the current candidate has **not** passed end-to-end UEFI and ARM64/
-RISC-V validation. Performance benchmarks on idle physical hardware are
-still pending.
+RISC-V validation.
 
 ## Licencias / Licensing
 
 Linux integration glue: GPL-2.0-only unless file headers state otherwise.
 Bundled upstream BLAKE3 C/assembly: CC0-1.0 (license included inside recipe
-\`files/LICENSE_CC0\`). Python component: see \`cli/pyproject.toml\`.
-See \`THIRD_PARTY.md\` and source-level notices.
+`files/LICENSE_CC0`). Python component: see `cli/pyproject.toml`.
+See `THIRD_PARTY.md` and source-level notices.
