@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1040" height="340" viewBox="0 0 1040 340" role="img" aria-labelledby="title desc">
+<title id="title">SolarisPKN-Verity — integrity validation with a Merkle tree</title>
+<desc id="desc">An immutable EXT4 image produces salted block hashes and a Merkle root; authenticated trust of that root enables verified read-only mounting. Corrupted data or hash blocks must fail closed. Animated dashed lines illustrate traversal.</desc>
+<defs>
+<linearGradient id="canvas" x2="1" y2="1"><stop stop-color="#111b2d"/><stop offset="1" stop-color="#1c2840"/></linearGradient>
+<linearGradient id="node" x2="0" y2="1"><stop stop-color="#213451"/><stop offset="1" stop-color="#17283c"/></linearGradient>
+<marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M1 1L9 5L1 9Z" fill="#69cdeb"/></marker>
+<style>
+ text{font:500 14px system-ui,-apple-system,"Segoe UI",sans-serif;fill:#ecf6ff}
+ .head{font-size:22px;font-weight:700}.muted{font-size:12px;fill:#a4bfd4}
+ .card{fill:url(#node);stroke:#80a8ca;stroke-width:1.4;rx:12}
+ .trusted{stroke:#72e3ae}.safe{stroke:#69cdeb}
+ .link{fill:none;stroke:#69cdeb;stroke-width:2.5;stroke-dasharray:8 7;marker-end:url(#arrow);animation:flow 2s linear infinite}
+ .sign{stroke:#72e3ae}.alert{stroke:#ffa689}
+ .dot{fill:#72e3ae;animation:blink 2s ease-in-out infinite}
+ @keyframes flow{to{stroke-dashoffset:-30}}
+ @keyframes blink{0%,100%{opacity:0.35}50%{opacity:1}}
+ @media (prefers-reduced-motion:reduce){.link,.dot{animation:none}}
+</style>
+</defs>
+<rect width="1040" height="340" fill="url(#canvas)" rx="18"/>
+<text class="head" x="32" y="43">SolarisPKN-Verity</text><text class="muted" x="32" y="66">dm-verity v1 + Linux Crypto API: salted hashes, trusted root, fail-closed</text>
+<rect class="card" x="28" y="114" width="170" height="91"/>
+<text x="113" y="145" text-anchor="middle">EXT4 read-only</text><text class="muted" x="113" y="171" text-anchor="middle">4096-byte data blocks</text>
+<rect class="card" x="254" y="114" width="178" height="91"/>
+<text x="343" y="144" text-anchor="middle">H(salt || block)</text><text class="muted" x="343" y="171" text-anchor="middle">32-byte leaf digests</text>
+<rect class="card" x="489" y="114" width="176" height="91"/>
+<text x="577" y="143" text-anchor="middle">Merkle levels</text><text class="muted" x="577" y="171" text-anchor="middle">root-first hash tree</text>
+<rect class="card trusted" x="723" y="114" width="146" height="91"/>
+<text x="796" y="142" text-anchor="middle">Root hash</text><text class="muted" x="796" y="169" text-anchor="middle">authenticated trust</text>
+<path class="link" d="M200 160H250"/><path class="link" d="M435 160H485"/><path class="link" d="M668 160H719"/>
+<path class="link sign" d="M871 160H929"/>
+<rect class="card safe" x="930" y="114" width="90" height="91"/>
+<text x="975" y="145" text-anchor="middle" font-size="12">Verified</text>
+<text x="975" y="168" text-anchor="middle" font-size="12">mount</text>
+<circle class="dot" cx="974" cy="187" r="5"/>
+<path d="M791 209 V255 H592" stroke="#72e3ae" stroke-width="2" stroke-dasharray="5 5" fill="none"/>
+<rect x="423" y="238" width="170" height="44" rx="9" fill="#173a35" stroke="#72e3ae"/>
+<text x="508" y="265" text-anchor="middle" font-size="13">PKCS#7 checked in lab</text>
+<rect x="32" y="244" width="333" height="60" rx="9" fill="#3b2530" stroke="#ffa689"/>
+<text x="47" y="267" font-size="13" fill="#ffd8c9">Corrupted data or tree → reject</text>
+<text x="47" y="288" class="muted">No silent raw-root fallback</text>
+<text x="738" y="293" class="muted">Lab verification ≠ UEFI Secure Boot</text>
+</svg>
