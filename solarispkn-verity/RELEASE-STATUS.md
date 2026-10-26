@@ -11,20 +11,21 @@ keys, private certificates or workplace-owned research are included.
 - New hardened SHASH + kernel return thunk candidate: KASAN/ENOMEM/recovery test PASS.
 - 168 concurrent/sequential digest calculations PASS.
 - Kernel mitigations retained; previous 12 objtool return warnings resolved.
-- dm-verity + root PKCS#7 signed boot passed on an **earlier** module revision only.
+- dm-verity + mandatory root PKCS#7 signature checks passed in **specific earlier lab builds**, not a full UEFI Secure Boot release.
+- Subsequent isolated lab runs rejected deliberate data and Merkle-tree corruption at 512 MiB and 1 GiB (6/6 functional cases). These do **not** attest the exact public 0.6.0-rc1 binary or UEFI chain.
+- See [ES functional fixes](docs/INTEGRATION-AND-REGRESSIONS.es.md) / [EN functional fixes](docs/INTEGRATION-AND-REGRESSIONS.en.md) for compatibility and validation boundaries.
 
 ## Faltante / Outstanding
 - Full UEFI OVMF Secure Boot validation: enrolled PK/KEK/db,
-  \`SecureBoot=1\`, \`SetupMode=0\`, signed UKI (kernel/initramfs/cmdline),
+  `SecureBoot=1`, `SetupMode=0`, signed UKI (kernel/initramfs/cmdline),
   authenticated dm-verity root hash and negative tests.
 - Re-run signedboot and corruption of data/tree with this exact source.
 - Stack-frame warnings around 2136/2240 bytes.
 - Reproduce with official Yocto GCC 15.3 instead of host GCC 14.2.
 - AVX-512 actual instruction execution on eligible CPU.
 - ARM64/RISC-V compilation and runtime; optional NEON later.
-- Streaming \`shash export\` longer than 64 bytes is explicitly
+- Streaming `shash export` longer than 64 bytes is explicitly
   unsupported (fail closed); further API lifecycle review required.
-- No final physical CPU throughput benchmarks have been run.
+- The exact public module revision still requires independently repeatable end-to-end integrity acceptance tests and a complete boot trust chain.
 
-**Do not represent this candidate as production secure boot or optimized
-maximum throughput. No Git remote push is implied by local publication.**
+**Do not represent this candidate as production secure boot. Public release material contains source code and functional checks, not speed benchmarks, private records or workplace research.**
