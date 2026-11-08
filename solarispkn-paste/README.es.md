@@ -31,6 +31,12 @@ Luego las actualizaciones llegan con apt update/upgrade. **No es un repositorio 
 - 🔌 **USB Advisor Windows:** avisa si un dispositivo SuperSpeed negocia a menor velocidad, propone conectores disponibles y permite silenciar avisos. La expulsión segura requiere confirmación explícita; faltan pruebas físicas.
 - ⚠️ **Límites:** Linux aún no ofrece GUI/Explorador, ACL/xattrs/SELinux completos, hardlinks, archivos dispersos ni rollback transaccional de directorios.
 
+## 🖱️ Menú contextual limpio y hover explicativo
+
+Windows muestra **una sola entrada** en el menú clásico: **SolarisPKN-Paste · Pegar ▸**. Todas las acciones, incluida la configuración y el pegado con UAC explícito, están dentro del submenú. En **Configuración**, mantener el cursor sobre cada opción durante **2 segundos** muestra una explicación.
+
+El tiempo de apertura del submenú lo controla Windows; **no se prometen 3 segundos exactos ni tooltips dentro del menú del Explorador** mientras no exista la extensión COM moderna. Si ya está instalado, debés volver a registrar el menú con el instalador. [Diseño y limitaciones](docs/SHELL-UX-ONE-ENTRY.md).
+
 ## 🪟 Compilar e instalar Windows
 
 Requiere Windows 10/11 x64 y .NET 10 SDK.
