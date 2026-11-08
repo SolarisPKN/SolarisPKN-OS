@@ -1,0 +1,20 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: SolarisPKN-Paste
+Source: https://github.com/SolarisPKN/SolarisPKN-OS/tree/main/solarispkn-paste
+Comment:
+ This Debian package includes only the Python Linux CLI and its tests.
+ The Windows application uses NuGet Blake3 as an external build dependency.
+ Third-party data and programs installed separately retain their licenses.
+ The copyright holder must verify contributions from any other rightsholders.
+
+Files: *
+Copyright: 2026 SolarisPKN contributors
+License: GPL-3.0-only
+
+Files: debian/*
+Copyright: 2026 SolarisPKN contributors
+License: GPL-3.0-only
+
+License: GPL-3.0-only
+ On Debian systems the full GNU GPL version 3 text is available at
+ /usr/share/common-licenses/GPL-3.

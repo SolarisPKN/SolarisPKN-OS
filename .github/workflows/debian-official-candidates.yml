@@ -1,0 +1,65 @@
+name: Debian official package candidates - source, binary and Lintian
+
+on:
+  push:
+    paths:
+      - "solarispkn-paste/**"
+      - "solarispkn-verity/**"
+      - "packaging/debian/**"
+      - ".github/workflows/debian-official-candidates.yml"
+  pull_request:
+    paths:
+      - "solarispkn-paste/**"
+      - "solarispkn-verity/**"
+      - "packaging/debian/**"
+      - ".github/workflows/debian-official-candidates.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  source-package:
+    name: Debian unstable source+binary - ${{ matrix.module }}
+    runs-on: ubuntu-latest
+    container: debian:sid
+    strategy:
+      fail-fast: false
+      matrix:
+        module: ["solarispkn-paste", "solarispkn-verity"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Debian official packaging tools and runtime dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            debhelper dh-sequence-python3 python3-all python3-setuptools \
+            dpkg-dev devscripts lintian build-essential xz-utils b3sum openssl \
+            ca-certificates file
+      - name: Build reproducible Debian 3.0 quilt source package and binary packages
+        env:
+          SOURCE_DATE_EPOCH: "1794096000"
+        run: |
+          bash packaging/debian/build-source.sh "${{ matrix.module }}" /tmp/debian-release
+          find /tmp/debian-release -maxdepth 1 -type f -printf '%f\n' | sort
+          test -n "$(find /tmp/debian-release -maxdepth 1 -name '*.dsc' -print -quit)"
+          test -n "$(find /tmp/debian-release -maxdepth 1 -name '*.deb' -print -quit)"
+          test -n "$(find /tmp/debian-release -maxdepth 1 -name '*.changes' -print -quit)"
+      - name: Analyze official Debian policy and copyright using Lintian
+        run: |
+          lintian --display-info --fail-on error /tmp/debian-release/*.changes
+      - name: APT install Debian-built binaries and run actual installed smoke tests
+        run: |
+          apt-get install -y /tmp/debian-release/*.deb
+          sh "${{ matrix.module }}/debian/tests/cli-smoke"
+      - name: Verify package source is inspectable without network
+        run: |
+          mkdir -p /tmp/debian-unpack
+          cd /tmp/debian-unpack
+          dpkg-source -x /tmp/debian-release/*.dsc
+          find . -maxdepth 3 -name control -path '*/debian/control' -print
+      - name: Publish source and binary artifacts for Debian sponsor review
+        uses: actions/upload-artifact@v4
+        with:
+          name: debian-candidate-${{ matrix.module }}
+          path: /tmp/debian-release/*
+          if-no-files-found: error

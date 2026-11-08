@@ -1,0 +1,24 @@
+#!/usr/bin/make -f
+export PYTHONDONTWRITEBYTECODE=1
+export DEB_BUILD_MAINT_OPTIONS=hardening=+all
+%:
+	dh $@
+
+override_dh_auto_build:
+	$(MAKE) -C tools/verity-tree
+
+override_dh_auto_test:
+	python3 -m unittest discover -s cli/tests -p 'test_verity*.py' -v
+	sh tests/test-sha256-unprivileged.sh
+
+override_dh_auto_install:
+	install -d -m 0755 debian/solarispkn-verity/usr/bin
+	install -d -m 0755 debian/solarispkn-verity/usr/lib/python3/dist-packages/solarispkn_verity
+	install -m 0644 cli/solarispkn_verity/__init__.py cli/solarispkn_verity/cli.py cli/solarispkn_verity/image.py debian/solarispkn-verity/usr/lib/python3/dist-packages/solarispkn_verity/
+	printf '%s\n' '#!/usr/bin/python3' 'from solarispkn_verity.cli import main' 'raise SystemExit(main())' > debian/solarispkn-verity/usr/bin/solarispkn-verity
+	chmod 0755 debian/solarispkn-verity/usr/bin/solarispkn-verity
+	install -d -m 0755 debian/solarispkn-verity-tree/usr/bin
+	install -m 0755 tools/verity-tree/solarispkn-verity-tree debian/solarispkn-verity-tree/usr/bin/
+
+override_dh_auto_clean:
+	$(MAKE) -C tools/verity-tree clean

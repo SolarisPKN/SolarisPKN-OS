@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-only
 """SolarisPKN-Paste for Linux: conservative I/O profiling and verified atomic copies."""
 from __future__ import annotations
 

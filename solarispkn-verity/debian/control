@@ -1,0 +1,33 @@
+Source: solarispkn-verity
+Section: utils
+Priority: optional
+Maintainer: SolarisPKN <31356753+SolarisPKN@users.noreply.github.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ python3-all,
+ python3-setuptools
+Standards-Version: 4.7.4
+Rules-Requires-Root: no
+Homepage: https://github.com/SolarisPKN/SolarisPKN-OS/tree/main/solarispkn-verity
+Vcs-Git: https://github.com/SolarisPKN/SolarisPKN-OS.git
+Vcs-Browser: https://github.com/SolarisPKN/SolarisPKN-OS/tree/main/solarispkn-verity
+
+Package: solarispkn-verity
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}, openssl
+Recommends: solarispkn-verity-tree
+Description: userspace Merkle-tree and signature tools for dm-verity
+ Experimental Python tools for building and checking Merkle manifests
+ and validating detached root hash PKCS#7 signatures.
+ .
+ This does not install a kernel module or enable Secure Boot.
+
+Package: solarispkn-verity-tree
+Architecture: linux-any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: experimental AF_ALG Merkle tree formatter and verifier
+ Linux userspace Merkle tree utility using AF_ALG for digests.
+ .
+ Requires an appropriate kernel hash implementation for the requested
+ algorithm; does not install a BLAKE3 provider or enforce dm-verity.

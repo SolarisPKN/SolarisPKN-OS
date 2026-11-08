@@ -1,0 +1,3 @@
+# No independent upstream version tags for this monorepo module yet.
+# Enable a watch definition only after publishing signed release tags.
+Version: 4

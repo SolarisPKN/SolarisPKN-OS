@@ -1,0 +1,16 @@
+.TH SOLARISPKN-VERITY-TREE 1 "November 2026" "SolarisPKN" "User Commands"
+.SH NAME
+solarispkn-verity-tree \- Merkle tree formatting via Linux AF_ALG
+.SH SYNOPSIS
+.B solarispkn-verity-tree
+.RI "COMMAND HASH [OPTIONS]"
+.SH DESCRIPTION
+Experimental userspace implementation of a Merkle tree formatter and verifier.
+SHA-256 may be available in the standard kernel. BLAKE3 requires a suitable
+registered hash provider and is not installed by this package.
+.SH COMMANDS
+format, verify, selftest.
+.SH SEE ALSO
+.BR veritysetup (8)
+.SH AUTHORS
+SolarisPKN contributors.

@@ -1,0 +1,7 @@
+solarispkn-paste (0.3.0~alpha1-1) unstable; urgency=medium
+
+  * Initial Debian source package for experimental verified Linux CLI.
+  * Build without network access using debhelper and Debian Python 3.
+  * Keep Windows GUI, drivers and privileged services out of binary package.
+
+ -- SolarisPKN <31356753+SolarisPKN@users.noreply.github.com>  Sun, 08 Nov 2026 00:00:00 -0300

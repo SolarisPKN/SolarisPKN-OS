@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+solarispkn-paste --help >/dev/null
+solarispkn-paste profile /tmp >/dev/null
+temp="$(mktemp -d)"
+trap 'rm -rf -- "$temp"' EXIT
+printf 'SolarisPKN APT/autopkgtest check\n' > "$temp/input"
+solarispkn-paste copy "$temp/input" "$temp/output" --hash sha256 >/dev/null
+cmp "$temp/input" "$temp/output"
+echo 'PASS solarispkn-paste installed CLI'

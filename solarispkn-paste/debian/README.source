@@ -1,0 +1,17 @@
+Source package notes
+====================
+
+This is a separately packaged module of a larger upstream Git monorepo.
+The Debian binary installs only the Linux Python CLI. It does NOT install
+the Windows GUI, drivers, or privileged Windows service. The direct
+upstream .deb builder is kept for historical comparison but Debian
+maintainers should build the canonical source with dpkg-buildpackage.
+
+The packaging branch currently names the author using GitHub's no-reply
+address; REPLACE with an approved, monitored public maintainer email
+before requesting sponsorship.
+
+Because the upstream project has not tagged an isolated module release,
+the source tarball is assembled by packaging/debian/build-source.sh from a
+specified commit; reproducible release tags and a functional debian/watch
+must be added before requesting a long-term sponsor.

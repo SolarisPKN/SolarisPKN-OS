@@ -119,3 +119,8 @@ make check
 Pendientes: Ubuntu real, permisos/ACL/xattrs, recuperación y cancelación, QA Explorer, hardware RAID propietario, hotplug USB físico y escritura sostenida.
 
 **Licencia:** SolarisPKN-Paste todavía no declara una licencia propia de redistribución; los terceros mantienen sus términos. Visibilidad pública en GitHub no significa permiso automático para reutilizar código. Mantené copias de seguridad de tus datos importantes. 💚
+
+
+## Licencia y paquetes Debian
+
+SolarisPKN-Paste se distribuye bajo **GPL-3.0-only** ([LICENSE](LICENSE)); las dependencias de terceros mantienen sus licencias propias. El empaquetado fuente para Debian está en [`debian/`](debian/). La incorporación a los repositorios oficiales requiere revisión y patrocinio de Debian; el repositorio APT propio sigue siendo una alternativa independiente.

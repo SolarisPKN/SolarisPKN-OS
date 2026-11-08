@@ -1,0 +1,10 @@
+SolarisPKN-Paste in Debian
+==========================
+
+This binary package provides only the Linux Python command-line copier.
+It does not install the Windows GUI, Explorer extensions, shell integration,
+privileged daemons, drivers, or services.
+
+By default writes are staged and verified. It is an experimental preview;
+do not rely on it as the sole backup of important data. Consult the
+package README for coverage and known limitations.

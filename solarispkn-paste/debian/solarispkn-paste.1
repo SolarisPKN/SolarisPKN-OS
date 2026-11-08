@@ -1,0 +1,25 @@
+.TH SOLARISPKN-PASTE 1 "November 2026" "SolarisPKN" "User Commands"
+.SH NAME
+solarispkn-paste \- integrity-verified Linux file copy
+.SH SYNOPSIS
+.B solarispkn-paste
+.RI "profile " "PATH"
+.br
+.B solarispkn-paste
+.RI "copy " "SOURCE DESTINATION [OPTIONS]"
+.br
+.B solarispkn-paste
+.RI "benchmark " "[OPTIONS]"
+.SH DESCRIPTION
+A native Python 3 userspace copier that stages writes and compares digests.
+The external b3sum utility provides BLAKE3. SHA-256 is available by explicit
+selection. Experimental; not a production recovery or backup program.
+.SH OPTIONS
+.TP
+.B --help
+Display command-specific help.
+.SH SEE ALSO
+.BR b3sum (1),
+.BR sha256sum (1)
+.SH AUTHORS
+SolarisPKN contributors.

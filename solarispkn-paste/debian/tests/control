@@ -1,0 +1,3 @@
+Tests: cli-smoke
+Depends: @, python3, b3sum
+Restrictions: superficial

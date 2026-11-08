@@ -1,0 +1,57 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: SolarisPKN-Verity
+Source: https://github.com/SolarisPKN/SolarisPKN-OS/tree/main/solarispkn-verity
+Comment:
+ This module contains components under distinct free licenses. The Debian
+ binary packages do not install the BLAKE3 kernel provider. File-level
+ provenance and employment-related rights need final copyright holder review.
+
+Files: *
+Copyright: 2026 SolarisPKN contributors
+License: GPL-2.0-only
+
+Files: cli/*
+Copyright: 2026 SolarisPKN contributors
+License: MIT
+
+Files: integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3.c
+ integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3.h
+ integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3_impl.h
+ integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3_portable.c
+ integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3_avx2_x86-64_unix.S
+ integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3_avx512_x86-64_unix.S
+ integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3_sse2_x86-64_unix.S
+ integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/blake3_sse41_x86-64_unix.S
+Copyright: 2019-2026 Jack O'Connor and BLAKE3 contributors
+License: CC0-1.0
+
+Files: debian/*
+Copyright: 2026 SolarisPKN contributors
+License: GPL-2.0-only
+
+License: GPL-2.0-only
+ On Debian systems the full GNU GPL version 2 text is available at
+ /usr/share/common-licenses/GPL-2.
+
+License: MIT
+ Permission is hereby granted, free of charge, to any person obtaining
+ a copy of this software and associated documentation files (the "Software"),
+ to deal in the Software without restriction, including without limitation
+ the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ and/or sell copies of the Software, and to permit persons to whom the
+ Software is furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included
+ in all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+ IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+ USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+License: CC0-1.0
+ The complete CC0 v1.0 text is bundled by upstream at
+ integrations/yocto/meta-solarispkn-crypto/recipes-kernel/blake3-solarispkn/files/LICENSE_CC0.
