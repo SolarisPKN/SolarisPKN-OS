@@ -15,14 +15,23 @@ internal static class Program
         try
         {
             string command=args.Length>0 ? args[0].ToLowerInvariant() :
-                (Path.GetFileName(Environment.ProcessPath)?.Contains("-Setup",StringComparison.OrdinalIgnoreCase)??false)?"--install":"--settings";
+                (Path.GetFileName(Environment.ProcessPath)?.Contains("-Setup",StringComparison.OrdinalIgnoreCase)??false)?"--setup":"--settings";
             // Cheap startup fingerprint. CPU microbenchmark runs only when
             // hardware identity changes; it never writes test data to drives.
             if(command is "--settings" or "--tray" or "--paste")
                 _=Task.Run(HardwareAutoProfiler.RefreshSafe); // never stall GUI startup
             switch(command)
             {
+                case "--setup": WindowsSetup.ShowInstaller(); break;
                 case "--install": Installer.Install(); break;
+                case "--install-machine": WindowsSetup.MachineInstall(args.Contains("--start-tray")); break;
+                case "--uninstall-machine": WindowsSetup.MachineUninstall(); break;
+                case "--elevated-paste":
+                    if(args.Length<2)throw new ArgumentException("Falta directorio");
+                    WindowsSetup.PrivilegedPaste(args[1]);
+                    break;
+                case "--installer-selftest": WindowsSetup.InstallerSelfTest(); break;
+                case "--capabilities-test": WindowsCapabilities.SelfTest(); break;
                 case "--toggle": if(args.Length<2)throw new ArgumentException("Falta opción");Installer.Toggle(args[1]);break;
                 case "--only-paste": Installer.OnlyPaste();break;
                 case "--uninstall": Installer.Uninstall(); break;
@@ -83,7 +92,9 @@ internal static class Program
             if(args.Any(x=>x.Equals("--selftest-headless",StringComparison.OrdinalIgnoreCase) ||
                 x.Equals("--hardware-profile-test",StringComparison.OrdinalIgnoreCase) ||
                 x.Equals("--usb-inspector-test",StringComparison.OrdinalIgnoreCase) ||
-                x.Equals("--usb-advisor-test",StringComparison.OrdinalIgnoreCase)))
+                x.Equals("--usb-advisor-test",StringComparison.OrdinalIgnoreCase) ||
+                x.Equals("--installer-selftest",StringComparison.OrdinalIgnoreCase) ||
+                x.Equals("--capabilities-test",StringComparison.OrdinalIgnoreCase)))
             {
                 Environment.ExitCode=2;
                 string target=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -343,6 +354,7 @@ internal sealed class SettingsWindow : Form
     readonly CheckBox _usbAlerts=new(){Text="Solaris: sugerencias de conexión USB junto al reloj",AutoSize=true};
     readonly CheckBox _usbFirstTime=new(){Text="Avisar al detectar un modelo USB nuevo por primera vez",AutoSize=true};
     readonly Button _showHardware=new(){Text="Ver hardware detectado y política de colas",Width=380,Height=34,Margin=new Padding(8)};
+    readonly Button _showCapabilities=new(){Text="Ver privilegios y capacidades reales de Windows",Width=380,Height=34,Margin=new Padding(8)};
     readonly CheckBox _preallocate=new(){Text="Preasignar espacio (fallback si no se admite)",AutoSize=true};
     readonly CheckBox _small=new(){Text="Optimizar archivos pequeños (hasta 64 KiB)",AutoSize=true};
     readonly CheckBox _pipeline=new(){Text="Canalización de archivos pequeños entre discos diferentes",AutoSize=true};
@@ -387,9 +399,20 @@ internal sealed class SettingsWindow : Form
         panel.Controls.Add(new Label(){Text="Varios filtros de comparación actúan con lógica AND.",AutoSize=true});
         foreach(var c in new[]{_delete,_newer,_older,_hash,_size,_existing,_ask,_antifrag,_fast,_adaptiveSsd,_adaptiveNvmeLarge,_adaptiveNvmeSmall,_hardwareProfile,_usbAlerts,_usbFirstTime,_small,_pipeline,_reuse,_durableSmall,_preallocate,_noConfirm})
         {c.Margin=new Padding(8,8,0,6);panel.Controls.Add(c);}
+        if(WindowsSetup.UserSimpleTier())
+        {
+            foreach(var control in new Control[]{_adaptiveSsd,_adaptiveNvmeLarge,
+                _adaptiveNvmeSmall,_writers})control.Enabled=false;
+            panel.Controls.Add(new Label(){Text="Modo usuario: experimentos nativos avanzados bloqueados; motores BLAKE3 seguros disponibles.",
+                ForeColor=Color.DarkSlateBlue,AutoSize=true,Margin=new Padding(8,6,0,8)});
+        }
         panel.Controls.Add(new Label(){Text="SSD experimental: CopyFile2 + vaciado + BLAKE3; solo NTFS y discos distintos confirmados.",
             AutoSize=true,Margin=new Padding(8,0,0,5)});
         panel.Controls.Add(_showHardware);
+        panel.Controls.Add(_showCapabilities);
+        _showCapabilities.Click+=(s,e)=>MessageBox.Show(this,
+            WindowsCapabilities.Inspect().Description(),
+            "SolarisPKN-Paste · Capacidades y permisos");
         _showHardware.Click+=async(s,e)=>{
             _showHardware.Enabled=false;
             try{

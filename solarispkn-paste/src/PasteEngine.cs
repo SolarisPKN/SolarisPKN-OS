@@ -88,11 +88,20 @@ internal sealed class PasteOptions
     public static string PathToSettings => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"SolarisPKN","Paste","settings.json");
     public static PasteOptions Load()
     {
-        try { return JsonSerializer.Deserialize<PasteOptions>(File.ReadAllText(PathToSettings)) ?? new(); }
-        catch { return new(); }
+        try {
+            var options=JsonSerializer.Deserialize<PasteOptions>(File.ReadAllText(PathToSettings)) ?? new();
+            WindowsSetup.ApplySimplePolicy(options);
+            return options;
+        }
+        catch {
+            var options=new PasteOptions();
+            WindowsSetup.ApplySimplePolicy(options);
+            return options;
+        }
     }
     public void Save()
     {
+        WindowsSetup.ApplySimplePolicy(this);
         if (NewerOnly && OlderOnly) throw new InvalidOperationException("Reciente y antiguo son excluyentes.");
         BufferMiB=Math.Clamp(BufferMiB,1,8);
         OverlappedDepth=Math.Clamp(OverlappedDepth,2,8);

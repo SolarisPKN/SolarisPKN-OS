@@ -14,10 +14,13 @@ internal static class Installer
     static string InstallFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Programs","SolarisPKN-Paste");
     static string InstalledExe => Path.Combine(InstallFolder,"SolarisPKN-Paste.exe");
+    static string MachineFolder => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),"SolarisPKN-Paste");
+    static string MachineExe => Path.Combine(MachineFolder,"SolarisPKN-Paste.exe");
+    static string TierKey => @"Software\SolarisPKN\Paste";
     static string UninstallReg => @"Software\Microsoft\Windows\CurrentVersion\Uninstall\SolarisPKN-Paste";
     static string RunReg => @"Software\Microsoft\Windows\CurrentVersion\Run";
 
-    public static void Install()
+    public static void Install(bool? startTrayOverride=null)
     {
         if(MessageBox.Show("¿Instalar SolarisPKN-Paste para esta cuenta?\n"+
             "Se copiará a tu AppData local y se agregarán comandos al menú contextual clásico del Explorador.\n"+
@@ -46,14 +49,15 @@ internal static class Installer
                 key.SetValue("NoRepair",1,RegistryValueKind.DWord);
             }
         }
-        bool startup=MessageBox.Show("¿Activar los atajos del teclado y mouse al iniciar Windows?\n"+
+        bool startup=startTrayOverride ?? (MessageBox.Show("¿Activar los atajos del teclado y mouse al iniciar Windows?\n"+
             "El residente solo atiende el atajo elegido y no registra pulsaciones.",
-            "Residente SolarisPKN-Paste",MessageBoxButtons.YesNo,MessageBoxIcon.Question)==DialogResult.Yes;
+            "Residente SolarisPKN-Paste",MessageBoxButtons.YesNo,MessageBoxIcon.Question)==DialogResult.Yes);
         using(var k=Registry.CurrentUser.CreateSubKey(RunReg))
         {
             if(startup)k?.SetValue("SolarisPKN-Paste","\""+InstalledExe+"\" --tray");
             else k?.DeleteValue("SolarisPKN-Paste",false);
         }
+        WindowsSetup.MarkUserInstall();
         MessageBox.Show("Instalación por usuario completada.\n"+
             "Windows 11: buscá el comando en «Mostrar más opciones» hasta crear la extensión COM.\n"+
             "Para activar atajos ahora, ejecutá SolarisPKN-Paste.exe --tray.\n"+
@@ -164,6 +168,7 @@ internal static class Installer
         }
         using(var key=Registry.CurrentUser.OpenSubKey(RunReg,true))key?.DeleteValue("SolarisPKN-Paste",false);
         Registry.CurrentUser.DeleteSubKeyTree(UninstallReg,false);
+        WindowsSetup.RemoveUserMarker();
         // No intentar eliminar el EXE en ejecución: Windows lo mantiene abierto.
         MessageBox.Show("Registro y arranque eliminados.\n"+
             "Para finalizar, cerrá el residente y borrá esta carpeta de la aplicación:\n"+InstallFolder+

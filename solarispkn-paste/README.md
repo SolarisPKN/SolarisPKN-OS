@@ -6,6 +6,21 @@
 
 Hardware-aware, integrity-verified file copying with **separate** Windows and Linux implementations.
 
+## 📥 Quick installation
+
+**Windows:** Download the experimental, self-contained **SolarisPKN-Paste-Setup.exe** from the Windows artifact of the latest successful [GitHub Actions run](https://github.com/SolarisPKN/SolarisPKN-OS/actions/workflows/solarispkn-paste.yml). Launch it and choose **Standard (per-user/HKCU, no UAC)** or **Advanced installation (all-users/HKLM, UAC)**. The advanced mode permits explicitly elevated protected-directory copy and reads available process-token privileges; a privileged signed acceleration service is **not yet implemented**. Standard user operations can still use Windows' efficient FileStream, OVERLAPPED, CopyFile2 and unbuffered I/O APIs where appropriate. [Detailed privilege matrix](docs/WINDOWS-PRIVILEGES-SETUP.md).
+
+**Linux:** Register the [signed third-party SolarisPKN repository](docs/APT-REPOSITORY.md) once, then install by package name:
+
+~~~bash
+curl -fL https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/solarispkn-paste/linux/packaging/bootstrap-apt.sh -o bootstrap-solarispkn-paste.sh
+less bootstrap-solarispkn-paste.sh
+sudo bash bootstrap-solarispkn-paste.sh
+sudo apt install solarispkn-paste
+~~~
+
+Updates then use normal apt update/upgrade. This is **not** part of official Debian or Ubuntu repositories. APT uses dedicated Signed-By and a verified OpenPGP key, never trusted=yes.
+
 ![How the copier works](docs/assets/copy-flow.svg)
 
 | Platform | Features | Status |

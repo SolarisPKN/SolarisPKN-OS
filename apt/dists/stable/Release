@@ -1,0 +1,32 @@
+Architectures: amd64 arm64
+Codename: stable
+Components: main
+Date: Sun, 08 Nov 2026 02:58:24 +0000
+Description: SolarisPKN-Paste signed experimental packages for Debian and Ubuntu
+Label: SolarisPKN Paste
+Origin: SolarisPKN
+Suite: stable
+MD5Sum:
+ a0c2f10987dd0ee4b5e267f5995d78b2              237 Release
+ 8a3d9fb27c35b56f01b432a975b04969              735 main/binary-amd64/Packages
+ 46ff71812aee02bb3471dc2bb1aeda7f              517 main/binary-amd64/Packages.gz
+ 8a3d9fb27c35b56f01b432a975b04969              735 main/binary-arm64/Packages
+ 46ff71812aee02bb3471dc2bb1aeda7f              517 main/binary-arm64/Packages.gz
+SHA1:
+ b11ca44b44c34dff637bb89ab950e85d41371956              237 Release
+ b13da4bcd36c462b2d41cafea415d7bafb5f49e7              735 main/binary-amd64/Packages
+ db705be10f544782b57de1144d0f6fd9b0ee06e0              517 main/binary-amd64/Packages.gz
+ b13da4bcd36c462b2d41cafea415d7bafb5f49e7              735 main/binary-arm64/Packages
+ db705be10f544782b57de1144d0f6fd9b0ee06e0              517 main/binary-arm64/Packages.gz
+SHA256:
+ 9a6f7450cc9344be849a5590ce2e99f61a5fbf32a7eb504ee697a02c6d1e2a95              237 Release
+ d4dc7b39d2116586aa599b04bb490dcef8c5b494950682bff2e56a647db3e5c3              735 main/binary-amd64/Packages
+ 667e9f91d9081e46ac3c7419856ae47e7f7f188fc24db1615adf30f57022f1b1              517 main/binary-amd64/Packages.gz
+ d4dc7b39d2116586aa599b04bb490dcef8c5b494950682bff2e56a647db3e5c3              735 main/binary-arm64/Packages
+ 667e9f91d9081e46ac3c7419856ae47e7f7f188fc24db1615adf30f57022f1b1              517 main/binary-arm64/Packages.gz
+SHA512:
+ f4598783a727b261c3b3a9e518a947f2ca5ded4f8d38c16b8b2110d70aa36869b86bcceacd3bb3b9cddd9f5bc866f08668926dd884d08fe13f889ccef260b91c              237 Release
+ acda39eb80e049494b62fbba7cd0ee69f6d95ed34781c997ceaa9a8b3fd9e1b7d57e8b6f5266c6b9bc42d6ce0d16284ef571a4854249a4da86937322aaf85b3f              735 main/binary-amd64/Packages
+ 44dfef976d5da6b30da3f6227e7099120deab5bf9da35f23eb28523bcd92860bf7c43249b01d4df9150dd04476deb7bbcafde14e02acc9cec85fdcfc29fa1eb1              517 main/binary-amd64/Packages.gz
+ acda39eb80e049494b62fbba7cd0ee69f6d95ed34781c997ceaa9a8b3fd9e1b7d57e8b6f5266c6b9bc42d6ce0d16284ef571a4854249a4da86937322aaf85b3f              735 main/binary-arm64/Packages
+ 44dfef976d5da6b30da3f6227e7099120deab5bf9da35f23eb28523bcd92860bf7c43249b01d4df9150dd04476deb7bbcafde14e02acc9cec85fdcfc29fa1eb1              517 main/binary-arm64/Packages.gz

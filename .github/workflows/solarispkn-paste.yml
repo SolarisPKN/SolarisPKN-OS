@@ -4,10 +4,12 @@ on:
   push:
     paths:
       - "solarispkn-paste/**"
+      - "apt/**"
       - ".github/workflows/solarispkn-paste.yml"
   pull_request:
     paths:
       - "solarispkn-paste/**"
+      - "apt/**"
       - ".github/workflows/solarispkn-paste.yml"
 
 permissions:
@@ -26,6 +28,8 @@ jobs:
           DEBIAN_FRONTEND=noninteractive apt-get install -y python3 b3sum dpkg-dev file
       - name: Run tests, build .deb, test BLAKE3, check SVG/GIF
         run: bash solarispkn-paste/linux/tests/release-qa.sh
+      - name: Verify signed APT index against public key
+        run: bash solarispkn-paste/linux/tests/apt-signature-smoke.sh
       - name: Install the real .deb and test entrypoint
         run: |
           dpkg -i 'solarispkn-paste/dist/solarispkn-paste_0.3.0~alpha1-1_all.deb'
@@ -81,3 +85,25 @@ jobs:
             Write-Warning "Self-test report missing: $report"
           }
           if ($testExit -ne 0) { exit $testExit }
+      - name: Publish self-contained Windows setup EXE
+        shell: pwsh
+        run: |
+          dotnet publish solarispkn-paste/src/SolarisPKN.Paste.csproj `
+            -c Release -r win-x64 --self-contained true `
+            -p:PublishSingleFile=true -p:EnableCompressionInSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -p:DebugType=None -p:DebugSymbols=false `
+            -o solarispkn-paste/out/windows
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $dir = "solarispkn-paste/out/windows"
+          Copy-Item "$dir/SolarisPKN-Paste.exe" "$dir/SolarisPKN-Paste-Setup.exe"
+          foreach ($check in @("--installer-selftest", "--capabilities-test")) {
+            $proc = Start-Process -FilePath "$dir/SolarisPKN-Paste-Setup.exe" -ArgumentList $check -Wait -PassThru
+            if ($proc.ExitCode -ne 0) { exit $proc.ExitCode }
+          }
+      - name: Upload unsigned Windows setup EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: solarispkn-paste-windows-setup-unsigned
+          path: solarispkn-paste/out/windows/SolarisPKN-Paste-Setup.exe
+          if-no-files-found: error
