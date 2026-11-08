@@ -6,6 +6,22 @@
 
 Un motor de copia con verificación de integridad y selección según CPU, RAM, HDD, SSD y RAID. Son **dos implementaciones diferentes**: Windows (.NET 10 WinForms con Explorador) y Linux (CLI Python 3 empaquetada como .deb para Debian/Ubuntu).
 
+### 🐧 Instalación en un paso
+
+**[⬇️ DESCARGAR E INSTALAR PASTE (.deb)](https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/apt/pool/main/s/solarispkn-paste/solarispkn-paste_0.3.0~alpha1-1_all.deb)** — hacé clic y abrí el archivo con la aplicación instaladora de paquetes de tu distribución. No agrega automáticamente nuestro repositorio de actualizaciones.
+
+**[⬇️ DESCARGAR INSTALADOR CON ACTUALIZACIONES (.sh)](https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/instalar-solarispkn-paste.sh)** — descarga el script y ejecutá `bash instalar-solarispkn-paste.sh` desde la carpeta donde lo guardaste. Instala Paste y deja preparado APT para nuevas versiones.
+
+Si preferís un solo comando en la terminal:
+
+```bash
+curl -fsSLo instalar-solarispkn-paste.sh https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/instalar-solarispkn-paste.sh && bash instalar-solarispkn-paste.sh
+```
+
+También funciona con `wget -O instalar-solarispkn-paste.sh https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/instalar-solarispkn-paste.sh` y después `bash instalar-solarispkn-paste.sh`.
+
+El script valida el SHA-256 del paquete de configuración y APT verifica las firmas de las releases. Solo pide la contraseña administrativa cuando Linux la necesita. **Un botón en GitHub puede descargar, pero no puede ejecutar automáticamente como administrador**: el paso de abrir/confirmar la instalación lo controla Linux.
+
 ## 📥 Instalación rápida
 
 **Windows:** Descargá el instalador autocontenido **SolarisPKN-Paste-Setup.exe** desde los artefactos de la última ejecución correcta de [GitHub Actions](https://github.com/SolarisPKN/SolarisPKN-OS/actions/workflows/solarispkn-paste.yml). Elegí **Standard (solo usuario/HKCU, sin UAC)** o **Advanced (todos los usuarios/HKLM, con UAC)**. El segundo permite copias explícitamente elevadas en carpetas protegidas y muestra los privilegios reales del proceso, pero **el servicio de aceleración privilegiada firmado todavía no está implementado**. Standard conserva FileStream, OVERLAPPED, CopyFile2 y E/S sin búfer cuando el sistema permite esas operaciones. [Matriz real de permisos](docs/WINDOWS-PRIVILEGES-SETUP.md).
