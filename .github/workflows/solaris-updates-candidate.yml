@@ -1,0 +1,85 @@
+name: SolarisPKN-Updates - reusable candidate inspector
+
+on:
+  workflow_call:
+    inputs:
+      product_id:
+        description: "Registered SolarisPKN product"
+        type: string
+        required: true
+      artifact_name:
+        description: "Exact successful build artifact name"
+        type: string
+        required: true
+      exe_name:
+        description: "Expected unsigned/signed Windows installer file"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  validate-artifact:
+    runs-on: windows-2025
+    steps:
+      - name: Validate reusable workflow contract and restrict input
+        shell: pwsh
+        env:
+          PRODUCT: ${{ inputs.product_id }}
+          ARTIFACT_NAME: ${{ inputs.artifact_name }}
+          EXE_NAME: ${{ inputs.exe_name }}
+        run: |
+          if ($env:PRODUCT -ne 'solarispkn-paste' -or
+              $env:ARTIFACT_NAME -ne 'solarispkn-paste-windows-setup-unsigned' -or
+              $env:EXE_NAME -ne 'SolarisPKN-Paste-Setup.exe') {
+              throw 'Unknown or unapproved candidate source'
+          }
+      - name: Download artifact from this exact successful CI run
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: candidate
+      - name: Verify file, run self-tests without installing, record signature state
+        shell: pwsh
+        env:
+          PRODUCT: ${{ inputs.product_id }}
+          EXE_NAME: ${{ inputs.exe_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $files = @(Get-ChildItem candidate -File -Recurse |
+              Where-Object { $_.Name -eq $env:EXE_NAME })
+          if ($files.Count -ne 1) { throw 'Expected exactly one candidate EXE' }
+          $exe = $files[0]
+          if ($exe.Length -le 0 -or $exe.Length -gt 1GB) { throw 'Unexpected artifact length' }
+          foreach ($check in @('--installer-selftest','--updates-selftest')) {
+              $proc = Start-Process -FilePath $exe.FullName -ArgumentList $check -Wait -PassThru
+              if ($proc.ExitCode -ne 0) { throw "Candidate selftest failed: $check" }
+          }
+          $auth = Get-AuthenticodeSignature -LiteralPath $exe.FullName
+          $report = [ordered]@{
+              schema = 1
+              product = $env:PRODUCT
+              status = 'candidate-not-approved'
+              source_run_id = $env:GITHUB_RUN_ID
+              source_commit_sha = $env:GITHUB_SHA
+              source_workflow = $env:GITHUB_WORKFLOW
+              platform = 'windows'
+              runner = $env:RUNNER_OS
+              digest_sha256 = (Get-FileHash -LiteralPath $exe.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+              bytes = $exe.Length
+              file_name = $exe.Name
+              authenticode = $auth.Status.ToString()
+              signer_thumbprint = if ($auth.SignerCertificate) { $auth.SignerCertificate.Thumbprint } else { $null }
+              approved_for_stable = $false
+              note = 'Unsigned or unreviewed builds are never promoted automatically. Test Windows 10/11 and prove signature and rollback before stable release.'
+          }
+          $report | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 candidate-report.json
+          Get-Content candidate-report.json
+      - name: Upload reusable candidate report (not an approved release)
+        uses: actions/upload-artifact@v4
+        with:
+          name: solarispkn-updates-paste-candidate-report
+          path: candidate-report.json
+          if-no-files-found: error

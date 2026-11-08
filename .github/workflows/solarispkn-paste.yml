@@ -107,3 +107,16 @@ jobs:
           name: solarispkn-paste-windows-setup-unsigned
           path: solarispkn-paste/out/windows/SolarisPKN-Paste-Setup.exe
           if-no-files-found: error
+
+  updates-candidate:
+    name: SolarisPKN-Updates - inspect exact successful Paste build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [debian, ubuntu, windows]
+    permissions:
+      contents: read
+      actions: read
+    uses: ./.github/workflows/solaris-updates-candidate.yml
+    with:
+      product_id: solarispkn-paste
+      artifact_name: solarispkn-paste-windows-setup-unsigned
+      exe_name: SolarisPKN-Paste-Setup.exe

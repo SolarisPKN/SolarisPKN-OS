@@ -12,10 +12,13 @@ No instalador automático se ejecuta todavía. La fuente `stable.json` está
    sistema de actualización.
 2. **SolarisPKN-Updates valida candidatos** mediante
    `.github/workflows/solaris-updates.yml`: contratos de compatibilidad,
-   Windows Server 2022/2025, hashes, origen GitHub, versiones y reportes
-   de firma. Cuando el CI de Paste termina correctamente en `main`,
-   inspecciona el artefacto producido por **esa ejecución exacta**.
-   El job es de **solo lectura**, no tiene permisos para crear releases.
+   Windows Server 2022/2025, hashes, origen GitHub y versiones.
+   Cuando los tres jobs (Windows, Debian y Ubuntu) de Paste terminan
+   correctamente en `main`, el job `updates-candidate` invoca
+   directamente el [workflow reutilizable](../.github/workflows/solaris-updates-candidate.yml)
+   en la **misma ejecución de GitHub Actions**; descarga y analiza su
+   artefacto exacto. El reporte queda en esa ejecución, sin depender de
+   eventos posteriores. Todo es de **solo lectura**: no crea releases.
 3. **GitHub Actions NO es el repositorio de actualizaciones de usuarios**:
    sus artefactos son temporales. Usaremos **GitHub Releases** con activos
    permanentes y manifiestos en `solarispkn-updates/channels/`.
