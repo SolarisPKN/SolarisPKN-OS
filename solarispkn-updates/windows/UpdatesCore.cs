@@ -163,6 +163,7 @@ public static class UpdatePolicy
         catch(FormatException) { return false; }
         var file=release.Asset;
         if(file.Platform!=platform || file.Architecture!=arch ||
+            file.MinOsBuild<19045 || file.MaxOsBuild<0 ||
             build<file.MinOsBuild || (file.MaxOsBuild>0 && build>file.MaxOsBuild) ||
             file.Bytes<=0 || file.Bytes>1024L*1024*1024 ||
             !Regex.IsMatch(file.Sha256, "^[a-fA-F0-9]{64}$") ||
