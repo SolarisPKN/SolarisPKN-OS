@@ -71,4 +71,13 @@ jobs:
           dotnet build solarispkn-paste/src/SolarisPKN.Paste.csproj -c Release --no-restore
       - name: Run existing Windows headless QA
         shell: pwsh
-        run: dotnet solarispkn-paste/src/bin/Release/net10.0-windows/SolarisPKN-Paste.dll --selftest-headless
+        run: |
+          dotnet solarispkn-paste/src/bin/Release/net10.0-windows/SolarisPKN-Paste.dll --selftest-headless
+          $testExit = $LASTEXITCODE
+          $report = Join-Path $env:LOCALAPPDATA "SolarisPKN\Paste\selftest.txt"
+          if (Test-Path $report) {
+            Get-Content $report
+          } else {
+            Write-Warning "Self-test report missing: $report"
+          }
+          if ($testExit -ne 0) { exit $testExit }
