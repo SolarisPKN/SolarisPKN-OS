@@ -2,7 +2,18 @@
 
 This is a **third-party SolarisPKN APT repository**, not an official Debian/Ubuntu archive. The Debian/Ubuntu .deb is the Linux CLI; no Windows GUI.
 
-## Install on Debian or Ubuntu
+## Fastest setup (no GPG commands)
+
+Download [solarispkn-repository_1.0-1_all.deb](https://github.com/SolarisPKN/SolarisPKN-OS/raw/refs/heads/main/apt/bootstrap/solarispkn-repository_1.0-1_all.deb) from the project, then run from the download directory:
+
+~~~bash
+sudo apt install ./solarispkn-repository_1.0-1_all.deb
+sudo apt update && sudo apt install solarispkn-paste
+~~~
+
+This small, script-free .deb includes a dedicated public APT key and a scoped Signed-By source definition. No manual key commands or edits to sources.list are needed. See [easy onboarding documentation](../../packaging/apt/README.md). If you previously used the older shell bootstrap, do not keep both repository entries; check migration notes first.
+
+## Install on Debian or Ubuntu (manual advanced alternative)
 
 The repository is signed with a dedicated OpenPGP Ed25519 key. Once the bootstrap is available in SolarisPKN-OS main, review and execute:
 

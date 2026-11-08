@@ -1,0 +1,72 @@
+name: SolarisPKN one-click signed APT repository setup
+
+on:
+  push:
+    paths:
+      - "packaging/apt/**"
+      - "apt/bootstrap/**"
+      - ".github/workflows/solarispkn-easy-install.yml"
+  pull_request:
+    paths:
+      - "packaging/apt/**"
+      - "apt/bootstrap/**"
+      - ".github/workflows/solarispkn-easy-install.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  repo-bootstrap:
+    name: Verify one-click archive registration on ${{ matrix.os }}
+    runs-on: ubuntu-latest
+    container: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["debian:trixie", "ubuntu:24.04"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install trusted distro TLS certificates
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates
+      - name: Build repository config package and compare file payloads
+        env:
+          SOURCE_DATE_EPOCH: "1794096000"
+        run: |
+          bash packaging/apt/build-repository-deb.sh /tmp/solarispkn-repository_1.0-1_all.deb
+          mkdir -p /tmp/expected-payload /tmp/rebuilt-payload /tmp/repo-control
+          dpkg-deb -x apt/bootstrap/solarispkn-repository_1.0-1_all.deb /tmp/expected-payload
+          dpkg-deb -x /tmp/solarispkn-repository_1.0-1_all.deb /tmp/rebuilt-payload
+          diff -r /tmp/expected-payload /tmp/rebuilt-payload
+          dpkg-deb -e apt/bootstrap/solarispkn-repository_1.0-1_all.deb /tmp/repo-control
+          for script in preinst postinst prerm postrm; do
+            test ! -e "/tmp/repo-control/$script" || { echo "Unexpected maintainer script: $script"; exit 3; }
+          done
+          dpkg-deb --contents /tmp/solarispkn-repository_1.0-1_all.deb
+      - name: Install repository package without scripts, root key commands or apt-key
+        run: |
+          DEBIAN_FRONTEND=noninteractive apt-get install -y ./apt/bootstrap/solarispkn-repository_1.0-1_all.deb
+          test -s /usr/share/keyrings/solarispkn-archive.asc
+          grep -F 'Signed-By: /usr/share/keyrings/solarispkn-archive.asc' /etc/apt/sources.list.d/solarispkn.sources
+          test "$(sha256sum /usr/share/keyrings/solarispkn-archive.asc | cut -d ' ' -f1)" = "161e51d5f57c34ed48425bee201c4d13bab9a0383718230898a49ef68ad67181"
+      - name: Verify public signed InRelease and install Paste by package name
+        run: |
+          apt-get update
+          apt-cache policy solarispkn-paste
+          DEBIAN_FRONTEND=noninteractive apt-get install -y solarispkn-paste
+          solarispkn-paste --version
+          solarispkn-paste profile /tmp
+      - name: Remove repository configuration and preserve installed application
+        run: |
+          apt-get purge -y solarispkn-repository
+          test ! -f /etc/apt/sources.list.d/solarispkn.sources
+          test ! -f /usr/share/keyrings/solarispkn-archive.asc
+          test -x /usr/bin/solarispkn-paste
+      - name: Upload bootstrap package
+        if: matrix.os == 'debian:trixie'
+        uses: actions/upload-artifact@v4
+        with:
+          name: solarispkn-one-click-apt-repository
+          path: apt/bootstrap/solarispkn-repository_1.0-1_all.deb
+          if-no-files-found: error
