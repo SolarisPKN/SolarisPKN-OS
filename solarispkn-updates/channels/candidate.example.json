@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "channel": "candidate",
+  "products": [
+    {
+      "id": "solarispkn-paste",
+      "releases": [
+        {
+          "version": "0.4.0",
+          "approved": false,
+          "notes": "EXAMPLE ONLY: does not offer or install this release",
+          "validation": {
+            "passed": false,
+            "runId": 0,
+            "sourceSha": "0000000000000000000000000000000000000000"
+          },
+          "asset": {
+            "platform": "windows",
+            "architecture": "x64",
+            "minOsBuild": 19045,
+            "maxOsBuild": 0,
+            "fileName": "SolarisPKN-Paste-Setup.exe",
+            "url": "https://github.com/SolarisPKN/SolarisPKN-OS/releases/download/paste-v0.4.0/SolarisPKN-Paste-Setup.exe",
+            "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+            "bytes": 1000000
+          }
+        }
+      ]
+    }
+  ]
+}

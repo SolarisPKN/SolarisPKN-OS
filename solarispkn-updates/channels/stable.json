@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "channel": "stable",
+  "products": [
+    {
+      "id": "solarispkn-paste",
+      "releases": []
+    },
+    {
+      "id": "solarispkn-verity",
+      "releases": []
+    }
+  ]
+}

@@ -37,6 +37,12 @@ Updates then use normal apt update/upgrade. This is **not** part of official Deb
 
 **Scope:** Linux has no Windows Explorer or WinForms GUI integration. Linux does **not yet** fully preserve POSIX ACL, xattrs, SELinux labels, hardlinks, sparse layout or complete directory rollback. RAID queuing does not defragment data.
 
+## 🔄 SolarisPKN-Updates (separate component)
+
+Paste references the independent [SolarisPKN-Updates](../solarispkn-updates/) module instead of embedding its code into the copy engine. Open `Settings > External Modules > SolarisPKN-Updates` to select **Off**, **Manual**, **At login** or **Weekly**.
+
+The tray resident checks silently according to the selected schedule. The updater only offers explicitly approved, OS-compatible **stable** releases; downloads are size/SHA-256 verified. **No downloaded EXE is executed automatically** before publisher-signature verification, reliable installer rollback and official promotion gates are available.
+
 ## 🖱️ Cleaner Explorer menu and explanatory hover
 
 Windows classic context menu has **one root entry**: **SolarisPKN-Paste · Pegar ▸**, with all actions nested (including settings and explicit UAC paste). In **Settings**, holding the pointer on an option for **2 seconds** displays an explanation.

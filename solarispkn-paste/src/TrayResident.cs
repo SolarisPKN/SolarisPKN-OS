@@ -17,6 +17,9 @@ internal sealed class TrayResident : ApplicationContext
     string _shortcut="";
     // Only a small read-only inventory after hotplug, debounced on UI thread.
     readonly System.Windows.Forms.Timer _rescanTimer=new(){Interval=750};
+    // Four-hour heartbeat checks only when the user's weekly mode is due.
+    readonly System.Windows.Forms.Timer _updatesTimer=new(){Interval=4*60*60*1000};
+    bool _updatesRunning;
     bool _rescanRunning;
     UsbPortInspector.Snapshot? _usbSnapshot;
     UsbAdvisorToast? _usbToast;
@@ -38,6 +41,7 @@ internal sealed class TrayResident : ApplicationContext
         var menu=new ContextMenuStrip();
         menu.Items.Add("Pegar (elegir destino)",null,(s,e)=>PasteToFolder());
         menu.Items.Add("Configuración",null,(s,e)=>Launch("--settings"));
+        menu.Items.Add("SolarisPKN-Updates...",null,(s,e)=>Launch("--updates"));
         menu.Items.Add("Recargar atajo",null,(s,e)=>ConfigureHotkey());
         menu.Items.Add("Analizar puertos USB ahora",null,async(s,e)=>{
             await ScanUsbAsync(manual:true);
@@ -58,10 +62,31 @@ internal sealed class TrayResident : ApplicationContext
             Visible=true,ContextMenuStrip=menu};
         _tray.DoubleClick+=(s,e)=>PasteToFolder();
         ConfigureHotkey();
+        _updatesTimer.Tick+=async(_,_)=>await CheckUpdatesAsync(atLogin:false);
+        _updatesTimer.Start();
+        _host.BeginInvoke((Action)(async()=>await CheckUpdatesAsync(atLogin:true)));
         // First scan establishes baseline without bombarding the desktop
         // with notifications for existing peripherals at every Windows login.
         _host.BeginInvoke((Action)(async()=>await ScanUsbAsync(manual:false)));
     }
+    async Task CheckUpdatesAsync(bool atLogin)
+    {
+        if(_updatesRunning)return;
+        _updatesRunning=true;
+        try
+        {
+            var version=await PasteUpdates.CheckScheduledAsync(atLogin);
+            if(version is not null)
+                Notify("Actualización validada de Paste disponible: "+version+
+                    ". Abrí SolarisPKN-Updates desde el menú para revisarla.");
+        }
+        catch
+        {
+            // Offline or invalid feeds never block clipboard/hotkeys or run an installer.
+        }
+        finally { _updatesRunning=false; }
+    }
+
     void ConfigureHotkey()
     {
         Native.UnregisterHotKey(_host.Handle,HOTKEY_ID);
@@ -199,6 +224,7 @@ internal sealed class TrayResident : ApplicationContext
         Native.UnregisterHotKey(_host.Handle,HOTKEY_ID);
         if(_hook!=IntPtr.Zero) Native.UnhookWindowsHookEx(_hook);
         _rescanTimer.Stop();_rescanTimer.Dispose();
+        _updatesTimer.Stop();_updatesTimer.Dispose();
         if(_usbToast is {IsDisposed:false})_usbToast.Close();
         _tray.Visible=false;_tray.Dispose();_host.Dispose();
         base.ExitThreadCore();

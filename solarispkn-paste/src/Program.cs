@@ -3,6 +3,7 @@ using System.Windows.Forms;
 using System.Collections.Specialized;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using SolarisPKN.Updates;
 
 namespace SolarisPKN.Paste;
 
@@ -37,6 +38,8 @@ internal static class Program
                 case "--only-paste": Installer.OnlyPaste();break;
                 case "--uninstall": Installer.Uninstall(); break;
                 case "--settings": Application.Run(new SettingsWindow()); break;
+                case "--updates": Application.Run(new UpdatesWindow(PasteUpdates.Product)); break;
+                case "--updates-selftest": PasteUpdates.SelfTest(); break;
                 case "--tray": Application.Run(new TrayResident()); break;
                 case "--selftest": SelfTest.Run(); break;
                 case "--selftest-headless": SelfTest.Run(false); break;
@@ -96,7 +99,8 @@ internal static class Program
                 x.Equals("--usb-advisor-test",StringComparison.OrdinalIgnoreCase) ||
                 x.Equals("--installer-selftest",StringComparison.OrdinalIgnoreCase) ||
                 x.Equals("--shell-registry-test",StringComparison.OrdinalIgnoreCase) ||
-                x.Equals("--capabilities-test",StringComparison.OrdinalIgnoreCase)))
+                x.Equals("--capabilities-test",StringComparison.OrdinalIgnoreCase) ||
+                x.Equals("--updates-selftest",StringComparison.OrdinalIgnoreCase)))
             {
                 Environment.ExitCode=2;
                 string target=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -450,6 +454,24 @@ internal sealed class SettingsWindow : Form
             AutoSize=true,Margin=new Padding(8,0,0,5)});
         panel.Controls.Add(_showHardware);
         panel.Controls.Add(_showCapabilities);
+        panel.Controls.Add(new Label
+        {
+            Text="MÓDULOS EXTERNOS",AutoSize=true,
+            Font=new Font("Segoe UI",9,FontStyle.Bold),
+            ForeColor=Color.DimGray,Margin=new Padding(8,18,0,4)
+        });
+        var updatesButton=new Button
+        {
+            Text="SolarisPKN-Updates  ·  administrar actualizaciones",
+            Width=420,Height=36,Margin=new Padding(8)
+        };
+        updatesButton.Click+=(_,_)=>{
+            using var window=new UpdatesWindow(PasteUpdates.Product);
+            window.ShowDialog(this);
+        };
+        _optionHelp.SetToolTip(updatesButton,
+            "Módulo independiente: frecuencia, búsqueda, versión compatible y descarga verificada.");
+        panel.Controls.Add(updatesButton);
         _showCapabilities.Click+=(s,e)=>MessageBox.Show(this,
             WindowsCapabilities.Inspect().Description(),
             "SolarisPKN-Paste · Capacidades y permisos");

@@ -1,0 +1,127 @@
+name: SolarisPKN-Updates - qualify a signed release (never auto-publish)
+
+on:
+  workflow_dispatch:
+    inputs:
+      product:
+        description: "Only specifically supported Windows products can be qualified"
+        type: choice
+        required: true
+        options: [solarispkn-paste]
+      version:
+        description: "Semantic version in release (e.g. 0.4.0)"
+        required: true
+        type: string
+      release_tag:
+        description: "Existing GitHub Release tag (e.g. paste-v0.4.0)"
+        required: true
+        type: string
+      source_run_id:
+        description: "Successful Paste build workflow run from main"
+        required: true
+        type: string
+      min_windows_build:
+        description: "Manually qualified minimum Windows build (19045=Windows 10 22H2)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  attestations: read
+
+jobs:
+  qualify:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ${{ matrix.runner }}
+    environment: stable-release-review
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [windows-2022, windows-2025]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticate, verify CI provenance, compare publisher signature and test installer safely
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+          VERSION: ${{ inputs.version }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          PRODUCT: ${{ inputs.product }}
+          MIN_BUILD: ${{ inputs.min_windows_build }}
+          EXPECTED_SIGNER: ${{ vars.SOLARISPKN_WINDOWS_SIGNER_THUMBPRINT }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($env:PRODUCT -ne 'solarispkn-paste') { throw 'Unsupported product' }
+          if ($env:VERSION -notmatch '^\d+\.\d+\.\d+(?:-[0-9A-Za-z.]+)?$') { throw 'Invalid version' }
+          if ($env:RELEASE_TAG -notmatch '^paste-v[0-9][a-zA-Z0-9._-]*$') { throw 'Invalid release tag' }
+          if ($env:SOURCE_RUN_ID -notmatch '^[1-9][0-9]*$') { throw 'Invalid run ID' }
+          if ($env:MIN_BUILD -notmatch '^[0-9]{5,6}$' -or [int]$env:MIN_BUILD -lt 19045) {
+            throw 'Unverified minimum OS build'
+          }
+          # The expected certificate must be configured independently as a
+          # GitHub repository variable. It cannot come from untrusted JSON.
+          if ($env:EXPECTED_SIGNER -notmatch '^[a-fA-F0-9]{40}$') {
+            throw 'No pinned code-signing certificate. Promotion blocked.'
+          }
+          $workflow = (gh api "repos/$env:GITHUB_REPOSITORY/actions/runs/$env:SOURCE_RUN_ID" | ConvertFrom-Json)
+          if ($LASTEXITCODE -ne 0 -or
+              $workflow.conclusion -ne 'success' -or
+              $workflow.head_branch -ne 'main' -or
+              $workflow.head_repository.full_name -ne $env:GITHUB_REPOSITORY -or
+              $workflow.name -ne 'SolarisPKN-Paste - Windows + Debian + Ubuntu') {
+            throw 'Source workflow not an approved successful main build'
+          }
+          $release = (gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --json isDraft,isPrerelease,tagName | ConvertFrom-Json)
+          if ($LASTEXITCODE -ne 0 -or $release.isDraft -or $release.isPrerelease) {
+            throw 'Release not public and stable'
+          }
+          $filename = 'SolarisPKN-Paste-Setup.exe'
+          New-Item -ItemType Directory -Force -Path candidate | Out-Null
+          gh release download $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY --pattern $filename --dir candidate --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Release asset download failed' }
+          $exe = (Resolve-Path "candidate/$filename").Path
+          $signature = Get-AuthenticodeSignature -LiteralPath $exe
+          if ($signature.Status -ne 'Valid' -or
+              -not $signature.SignerCertificate -or
+              $signature.SignerCertificate.Thumbprint -ne $env:EXPECTED_SIGNER) {
+            throw 'Authenticode signature missing, invalid or not pinned to SolarisPKN publisher'
+          }
+          # Provenance must bind the signed EXE, not a different unsigned CI file.
+          gh attestation verify $exe --repo $env:GITHUB_REPOSITORY
+          if ($LASTEXITCODE -ne 0) { throw 'Signed build provenance attestation invalid or absent' }
+          foreach ($test in @('--installer-selftest','--updates-selftest')) {
+            $proc = Start-Process -FilePath $exe -ArgumentList $test -PassThru -Wait
+            if ($proc.ExitCode -ne 0) { throw "Candidate test $test failed" }
+          }
+          $hash = (Get-FileHash -LiteralPath $exe -Algorithm SHA256).Hash.ToLowerInvariant()
+          $entry = [ordered]@{
+            version = $env:VERSION
+            approved = $true
+            notes = "Reviewed stable release. Windows 10/11 interactive QA evidence must be checked before the catalog PR."
+            validation = [ordered]@{
+              passed = $true
+              runId = [long]$env:SOURCE_RUN_ID
+              sourceSha = $workflow.head_sha
+            }
+            asset = [ordered]@{
+              platform = 'windows'
+              architecture = 'x64'
+              minOsBuild = [int]$env:MIN_BUILD
+              maxOsBuild = 0
+              fileName = $filename
+              url = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:RELEASE_TAG/$filename"
+              sha256 = $hash
+              bytes = (Get-Item -LiteralPath $exe).Length
+            }
+            signerThumbprint = $signature.SignerCertificate.Thumbprint
+            evidenceRunner = $env:RUNNER_NAME
+          }
+          $entry | ConvertTo-Json -Depth 6 | Set-Content -Encoding utf8 "stable-proposal-${{ matrix.runner }}.json"
+          Write-Output 'QUALIFIED CANDIDATE. Not published to stable.json; manual QA and PR required.'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stable-proposal-${{ matrix.runner }}
+          path: stable-proposal-${{ matrix.runner }}.json
+          if-no-files-found: error
