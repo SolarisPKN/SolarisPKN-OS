@@ -2,5 +2,17 @@
 set -eu
 solarispkn-verity --version
 solarispkn-verity doctor >/dev/null
-solarispkn-verity-tree 2>&1 | head -n 4 || true
-echo 'PASS solarispkn-verity userspace CLI installation'
+tmp="$(mktemp -d)"
+trap 'rm -rf -- "$tmp"' EXIT
+dd if=/dev/zero of="$tmp/image" bs=4096 count=130 status=none
+solarispkn-verity build --image "$tmp/image" --tree "$tmp/tree" \
+  --manifest "$tmp/manifest" --algorithm sha256 --salt 00112233 >/dev/null
+solarispkn-verity verify --image "$tmp/image" --tree "$tmp/tree" \
+  --manifest "$tmp/manifest" >/dev/null
+printf '\001' | dd of="$tmp/image" bs=1 seek=12 conv=notrunc status=none
+if solarispkn-verity verify --image "$tmp/image" --tree "$tmp/tree" \
+  --manifest "$tmp/manifest" >/dev/null 2>&1; then
+  echo 'FAIL: changed image accepted by Verity' >&2
+  exit 1
+fi
+echo 'PASS: installed Verity CLI valid tree and tampering rejection'
