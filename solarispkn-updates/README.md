@@ -31,6 +31,36 @@ No instalador automático se ejecuta todavía. La fuente `stable.json` está
    `validation.passed=true` no demuestra que se hayan ejecutado esas pruebas:
    el control debe verificarse también en el pipeline de publicación.
 
+## Workflow de calificación de una release real
+
+[solaris-updates-qualify-release.yml](../.github/workflows/solaris-updates-qualify-release.yml)
+se inicia **manualmente** sobre `main` indicando el producto, la versión,
+el tag GitHub Release ya publicado y el ID del run que compiló en `main`.
+El workflow ejecuta verificaciones en Windows Server 2022 y 2025 y exige:
+
+- Run de Paste correcto, de este mismo repositorio, sobre la rama `main`.
+- Release pública **no prerelease ni draft**.
+- Firma Authenticode **Valid** con huella de publicador anclada a la
+  variable del repositorio `SOLARISPKN_WINDOWS_SIGNER_THUMBPRINT`;
+  si no está configurada, el proceso falla **cerrado**.
+- Atestación Sigstore/GitHub que verifique **exactamente el EXE firmado**
+  descargado desde Releases.
+- Autotests sin manipular instalaciones locales, más hash y tamaño.
+
+El workflow produce `stable-proposal-windows-2022.json` y
+`stable-proposal-windows-2025.json`, pero **no escribe el catálogo estable,
+no publica releases ni instala nada a usuarios**. Los dos informes deben
+coincidir y revisarse, además de exigir QA interactiva en Windows 10/11 y
+rollback. Un mantenedor incorpora la entrada a `stable.json` mediante
+PR y revisión. El entorno `stable-release-review` debe configurarse
+expresamente con revisores obligatorios en GitHub: nombrar un entorno en YAML
+**no crea por sí mismo protección de aprobación**.
+
+**Bloqueo actual:** no hay certificado Authenticode de editor configurado
+ni una atestación del instalador *firmado*. Por eso actualmente el workflow
+no puede aprobar una release, por diseño. Se requiere firma del binario
+**antes** de generar su atestación de procedencia.
+
 ## Frecuencias en Paste
 
 | Configuración | Comportamiento |
