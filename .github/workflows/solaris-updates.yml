@@ -1,0 +1,139 @@
+name: SolarisPKN-Updates - policy, OS matrix and release candidates
+
+on:
+  push:
+    paths:
+      - "solarispkn-updates/**"
+      - "solarispkn-paste/src/**"
+      - ".github/workflows/solaris-updates.yml"
+  pull_request:
+    paths:
+      - "solarispkn-updates/**"
+      - "solarispkn-paste/src/**"
+      - ".github/workflows/solaris-updates.yml"
+  workflow_run:
+    workflows: ["SolarisPKN-Paste - Windows + Debian + Ubuntu"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  feed-policy:
+    if: github.event_name != 'workflow_run'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate stable and sample candidate feeds
+        run: |
+          python3 solarispkn-updates/tools/validate_manifest.py solarispkn-updates/channels/stable.json
+          python3 solarispkn-updates/tools/validate_manifest.py solarispkn-updates/channels/candidate.example.json
+      - name: Negative gates fail closed
+        run: |
+          python3 - <<'PY'
+          import copy, json, tempfile
+          from pathlib import Path
+          import sys
+          sys.path.insert(0, 'solarispkn-updates/tools')
+          from validate_manifest import validate
+          original = json.loads(Path('solarispkn-updates/channels/candidate.example.json').read_text())
+          item = original['products'][0]['releases'][0]
+          item['approved'] = True
+          item['validation'] = {
+              'passed': True, 'runId': 1, 'sourceSha': 'a' * 40}
+          item['asset']['sha256'] = 'b' * 64
+          for patch in (
+              {'url': 'https://not-github.invalid/bad.exe'},
+              {'sha256': '0'},
+              {'minOsBuild': -1},
+              {'architecture': 'mips'},
+          ):
+              current = copy.deepcopy(original)
+              current['products'][0]['releases'][0]['asset'].update(patch)
+              with tempfile.TemporaryDirectory() as td:
+                  path = Path(td)/'candidate.json'
+                  path.write_text(json.dumps(current))
+                  try:
+                      validate(path, stable=False)
+                  except ValueError:
+                      continue
+                  raise SystemExit('Unsafe candidate unexpectedly accepted: '+str(patch))
+          print('REJECTION_POLICY_PASS')
+          PY
+
+  windows-module:
+    if: github.event_name != 'workflow_run'
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [windows-2022, windows-2025]
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - name: Build independent updater and integrated Paste
+        shell: pwsh
+        run: |
+          dotnet restore solarispkn-paste/src/SolarisPKN.Paste.csproj
+          dotnet build solarispkn-paste/src/SolarisPKN.Paste.csproj -c Release --no-restore
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Test versioning, OS compatibility, approval, origin and schedule policy
+        shell: pwsh
+        run: |
+          dotnet solarispkn-paste/src/bin/Release/net10.0-windows/SolarisPKN-Paste.dll --updates-selftest
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+  inspect-completed-paste:
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: windows-2025
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Fetch the exact validated build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: solarispkn-paste-windows-setup-unsigned
+          path: candidate
+          run-id: ${{ github.event.workflow_run.id }}
+          repository: ${{ github.repository }}
+          github-token: ${{ github.token }}
+      - name: Inspect digital signature and stage read-only report
+        shell: pwsh
+        env:
+          VALIDATED_RUN: ${{ github.event.workflow_run.id }}
+          VALIDATED_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          $exe = (Get-ChildItem candidate -Filter 'SolarisPKN-Paste-Setup.exe' -File | Select-Object -First 1)
+          if ($null -eq $exe) { throw 'Missing candidate EXE' }
+          $signature = Get-AuthenticodeSignature -LiteralPath $exe.FullName
+          $sum = (Get-FileHash -LiteralPath $exe.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+          $report = [ordered]@{
+            product = "solarispkn-paste"
+            source_run_id = $env:VALIDATED_RUN
+            source_sha = $env:VALIDATED_SHA
+            file = $exe.Name
+            sha256 = $sum
+            bytes = $exe.Length
+            authenticode = $signature.Status.ToString()
+            signer_thumbprint = if ($signature.SignerCertificate) { $signature.SignerCertificate.Thumbprint } else { $null }
+            approved_for_stable = $false
+            note = "CI candidate only; no publishing until signature, OS qualification and maintainer approval."
+          }
+          $report | ConvertTo-Json -Depth 4 | Set-Content -Encoding utf8 candidate-report.json
+          Get-Content candidate-report.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: solarispkn-updates-candidate-report
+          path: candidate-report.json
+          if-no-files-found: error
