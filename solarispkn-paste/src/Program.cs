@@ -31,6 +31,7 @@ internal static class Program
                     WindowsSetup.PrivilegedPaste(args[1]);
                     break;
                 case "--installer-selftest": WindowsSetup.InstallerSelfTest(); break;
+                case "--shell-registry-test": ShellMenu.RegistrySelfTest(); break;
                 case "--capabilities-test": WindowsCapabilities.SelfTest(); break;
                 case "--toggle": if(args.Length<2)throw new ArgumentException("Falta opción");Installer.Toggle(args[1]);break;
                 case "--only-paste": Installer.OnlyPaste();break;
@@ -94,6 +95,7 @@ internal static class Program
                 x.Equals("--usb-inspector-test",StringComparison.OrdinalIgnoreCase) ||
                 x.Equals("--usb-advisor-test",StringComparison.OrdinalIgnoreCase) ||
                 x.Equals("--installer-selftest",StringComparison.OrdinalIgnoreCase) ||
+                x.Equals("--shell-registry-test",StringComparison.OrdinalIgnoreCase) ||
                 x.Equals("--capabilities-test",StringComparison.OrdinalIgnoreCase)))
             {
                 Environment.ExitCode=2;
