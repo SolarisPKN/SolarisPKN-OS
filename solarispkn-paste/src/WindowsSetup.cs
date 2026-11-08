@@ -155,27 +155,9 @@ internal static class WindowsSetup
     {
         foreach(var parent in ShellRoots)
         {
-            string path=parent.Contains("Background")?"%V\\.":"%1\\.";
-            RegisterVerb(parent, "SolarisPKN-Paste",
-                "SolarisPKN-Paste (verificado)",
-                "\""+MachineExe+"\" --paste \""+path+"\"");
-            RegisterVerb(parent, "SolarisPKN-Paste-Admin",
-                "SolarisPKN-Paste · pegar con UAC",
-                "\""+MachineExe+"\" --elevated-paste \""+path+"\"");
-            RegisterVerb(parent, "SolarisPKN-Paste-Settings",
-                "SolarisPKN-Paste · configuración",
-                "\""+MachineExe+"\" --settings");
+            string path=parent.Contains("Background",StringComparison.Ordinal)?"%V\\.":"%1\\.";
+            ShellMenu.Register(Registry.LocalMachine,parent,MachineExe,path,machine:true);
         }
-    }
-    private static void RegisterVerb(string root,string name,string caption,string commandLine)
-    {
-        using var key=Registry.LocalMachine.CreateSubKey(root+"\\"+name,true) ??
-            throw new IOException("Cannot register HKLM shell verb: "+name);
-        key.SetValue("",caption);
-        key.SetValue("Icon",MachineExe);
-        using var command=key.CreateSubKey("command",true) ??
-            throw new IOException("Cannot register command");
-        command.SetValue("",commandLine);
     }
 
     public static void MachineUninstall()
@@ -186,8 +168,8 @@ internal static class WindowsSetup
             "Desinstalación del equipo",MessageBoxButtons.YesNo,
             MessageBoxIcon.Warning,MessageBoxDefaultButton.Button2)!=DialogResult.Yes)return;
         foreach(var parent in ShellRoots)
-        foreach(var verb in new[]{"SolarisPKN-Paste","SolarisPKN-Paste-Admin",
-                                 "SolarisPKN-Paste-Settings"})
+        foreach(var verb in new[]{"SolarisPKN-Paste","SolarisPKN-Paste-Options",
+                                 "SolarisPKN-Paste-Admin","SolarisPKN-Paste-Settings"})
         {
             Registry.LocalMachine.DeleteSubKeyTree(parent+"\\"+verb,
                 throwOnMissingSubKey:false);
@@ -246,6 +228,7 @@ internal static class WindowsSetup
                StringComparison.OrdinalIgnoreCase))
             throw new IOException("Installation scopes overlap or are not absolute");
         WindowsCapabilities.SelfTest();
+        ShellMenu.SelfTest();
         if(!Path.GetFileName(SourceExe).EndsWith(".exe",
                StringComparison.OrdinalIgnoreCase))
             throw new IOException("Expected Windows executable");
