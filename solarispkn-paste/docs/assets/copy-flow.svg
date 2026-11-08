@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="420" viewBox="0 0 1200 420" role="img" aria-labelledby="title description">
+<title id="title">SolarisPKN-Paste: hardware-aware verified file copy</title>
+<desc id="description">Detect disk topology. Choose mechanical queue or bounded parallel SSD engine. Copy to staging. Verify BLAKE3. Atomically publish to target.</desc>
+<defs>
+<linearGradient id="bg" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#111d34"/><stop offset="1" stop-color="#071123"/></linearGradient>
+<linearGradient id="green"><stop stop-color="#39e4b6"/><stop offset="1" stop-color="#1d9fd2"/></linearGradient>
+<filter id="shadow"><feDropShadow dx="0" dy="7" stdDeviation="9" flood-color="#000" flood-opacity=".35"/></filter>
+<style><![CDATA[
+*{font-family:Segoe UI,Arial,sans-serif}
+.node{fill:#1c2d47;stroke:#3a5472;stroke-width:2}
+.label{fill:#e6f4ff;font-size:21px;font-weight:700}
+.info{fill:#afc5e1;font-size:15px}
+.path{fill:none;stroke:#2fd8b4;stroke-width:4;stroke-linecap:round;stroke-dasharray:11 10;animation:move 1.4s linear infinite}
+@keyframes move {to{stroke-dashoffset:-42}}
+.pulse{animation:pulse 2.8s ease-in-out infinite;transform-origin:center}
+@keyframes pulse{0%,100%{opacity:.55}50%{opacity:1}}
+]]></style>
+</defs>
+<rect width="1200" height="420" rx="24" fill="url(#bg)"/>
+<text x="47" y="56" font-size="33" font-weight="700" fill="#e7f3ff">SolarisPKN-Paste</text>
+<text x="47" y="90" font-size="18" fill="#9eb6d2">Adaptive transfer policy · Integrity first · Windows + Linux</text>
+<g filter="url(#shadow)">
+<rect class="node" x="50" y="130" rx="16" width="235" height="184"/>
+<rect class="node" x="350" y="130" rx="16" width="235" height="184"/>
+<rect class="node" x="650" y="130" rx="16" width="235" height="184"/>
+<rect class="node" x="950" y="130" rx="16" width="205" height="184"/>
+</g>
+<g text-anchor="middle">
+<text class="label" x="167" y="182">01 · Detect</text>
+<text class="info" x="167" y="216">CPU / RAM / bus</text><text class="info" x="167" y="243">HDD / SSD / RAID</text>
+<text class="label" x="467" y="182">02 · Route</text>
+<text class="info" x="467" y="216">HDD → serial queue</text><text class="info" x="467" y="243">SSD → bounded parallel</text>
+<text class="label" x="767" y="182">03 · Verify</text>
+<text class="info" x="767" y="216">Exclusive temp file</text><text class="info" x="767" y="243">BLAKE3 source + output</text>
+<text class="label" x="1053" y="182">04 · Publish</text>
+<text class="info" x="1053" y="216">fsync / rename</text><text class="info" x="1053" y="243">Recovery backup</text>
+</g>
+<path class="path" d="M285 225H350M585 225H650M885 225H950"/>
+<circle class="pulse" cx="767" cy="282" r="10" fill="#33dcb4"/>
+<circle class="pulse" cx="1053" cy="282" r="10" fill="#33dcb4"/>
+<text x="50" y="365" font-size="15" fill="#91acc8">Linux: CLI + .deb · Windows: Explorer + WinForms · Different feature sets, shared safety principles</text>
+<text x="50" y="391" font-size="14" fill="#7191b0">Measured throughput depends on workload, cache state, device topology and verification method.</text>
+</svg>

@@ -1,0 +1,21 @@
+# Build output; single-file Windows packages exceed GitHub 100 MB per-file limit.
+src/bin/
+src/obj/
+release/
+release-candidate/
+*.pdb
+*.user
+*.suo
+
+# Generated benchmark files must never be committed.
+benchmarks/
+reports/
+*.spaste-*.tmp
+
+# Python runtime caches and local release experiments
+__pycache__/
+*.pyc
+out/
+*.swp
+
+# The small tested Debian .deb in dist/ is deliberately distributable.

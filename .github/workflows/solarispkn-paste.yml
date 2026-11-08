@@ -1,0 +1,83 @@
+name: SolarisPKN-Paste - Windows + Debian + Ubuntu
+
+on:
+  push:
+    paths:
+      - "solarispkn-paste/**"
+      - ".github/workflows/solarispkn-paste.yml"
+  pull_request:
+    paths:
+      - "solarispkn-paste/**"
+      - ".github/workflows/solarispkn-paste.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  debian:
+    name: Debian 13 - package, verification and benchmarks
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install official Debian dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y python3 b3sum dpkg-dev file
+      - name: Run tests, build .deb, test BLAKE3, check SVG/GIF
+        run: bash solarispkn-paste/linux/tests/release-qa.sh
+      - name: Install the real .deb and test entrypoint
+        run: |
+          dpkg -i 'solarispkn-paste/dist/solarispkn-paste_0.3.0~alpha1-1_all.deb'
+          solarispkn-paste --version
+          solarispkn-paste profile /tmp
+      - name: Upload Debian package for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: solarispkn-paste-debian-all
+          path: solarispkn-paste/dist/*.deb
+          if-no-files-found: error
+
+  ubuntu:
+    name: Ubuntu - package install smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Ubuntu build and BLAKE3 dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y b3sum
+      - name: Run Linux copy unit tests
+        run: cd solarispkn-paste/linux && python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - name: Build and install native CLI
+        run: |
+          bash solarispkn-paste/linux/packaging/build-deb.sh
+          sudo apt-get install -y './solarispkn-paste/dist/solarispkn-paste_0.3.0~alpha1-1_all.deb'
+          solarispkn-paste --version
+          solarispkn-paste profile "$HOME"
+
+  windows:
+    name: Windows 10+ candidate - build and self-test
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - name: Restore and build Windows engine
+        shell: pwsh
+        run: |
+          dotnet restore solarispkn-paste/src/SolarisPKN.Paste.csproj
+          dotnet build solarispkn-paste/src/SolarisPKN.Paste.csproj -c Release --no-restore
+      - name: Run existing Windows headless QA
+        shell: pwsh
+        run: |
+          dotnet solarispkn-paste/src/bin/Release/net10.0-windows/SolarisPKN-Paste.dll --selftest-headless
+          $testExit = $LASTEXITCODE
+          $report = Join-Path $env:LOCALAPPDATA "SolarisPKN\Paste\selftest.txt"
+          if (Test-Path $report) {
+            Get-Content $report
+          } else {
+            Write-Warning "Self-test report missing: $report"
+          }
+          if ($testExit -ne 0) { exit $testExit }
