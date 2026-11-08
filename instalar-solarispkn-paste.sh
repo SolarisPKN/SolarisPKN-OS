@@ -49,6 +49,10 @@ new_source="/etc/apt/sources.list.d/solarispkn.sources"
 new_key="/usr/share/keyrings/solarispkn-archive.asc"
 legacy_source="/etc/apt/sources.list.d/solarispkn-paste.sources"
 
+if [[ -f "$new_source" && -f "$legacy_source" ]]; then
+    fail "Hay dos fuentes APT de SolarisPKN (antigua y nueva). Revisá y migrá la duplicada antes de instalar."
+fi
+
 if dpkg-query -W -f='${db:Status-Abbrev}' solarispkn-repository 2>/dev/null | grep -q '^ii '; then
     [[ -s "$new_key" && -s "$new_source" ]] || fail "El repositorio está instalado pero incompleto. Reparalo antes de seguir."
     say "Repositorio SolarisPKN ya configurado; no se duplicarán claves."
