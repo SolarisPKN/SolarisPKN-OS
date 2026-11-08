@@ -31,6 +31,12 @@ Luego las actualizaciones llegan con apt update/upgrade. **No es un repositorio 
 - 🔌 **USB Advisor Windows:** avisa si un dispositivo SuperSpeed negocia a menor velocidad, propone conectores disponibles y permite silenciar avisos. La expulsión segura requiere confirmación explícita; faltan pruebas físicas.
 - ⚠️ **Límites:** Linux aún no ofrece GUI/Explorador, ACL/xattrs/SELinux completos, hardlinks, archivos dispersos ni rollback transaccional de directorios.
 
+## 🔄 SolarisPKN-Updates (módulo externo)
+
+Paste incorpora el cliente independiente [SolarisPKN-Updates](../solarispkn-updates/) como un apartado pequeño de su configuración, sin mezclarlo con el motor de copia. Elegí **Desactivadas**, **Manual**, **Al iniciar sesión** o **Semanal** desde `Configuración > MÓDULOS EXTERNOS > SolarisPKN-Updates`.
+
+El residente del sistema comprueba el calendario sin interrumpir el pegado. El cliente solo consulta el canal **estable** y puede descargar una release compatible tras comprobar tamaño y SHA-256. **No ejecuta instaladores automáticamente** hasta tener una firma de editor verificable y un flujo de aprobación/rollback probado. Las versiones experimentales de Actions no se ofrecen como estables.
+
 ## 🖱️ Menú contextual limpio y hover explicativo
 
 Windows muestra **una sola entrada** en el menú clásico: **SolarisPKN-Paste · Pegar ▸**. Todas las acciones, incluida la configuración y el pegado con UAC explícito, están dentro del submenú. En **Configuración**, mantener el cursor sobre cada opción durante **2 segundos** muestra una explicación.
