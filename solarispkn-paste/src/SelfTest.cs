@@ -369,13 +369,21 @@ internal static class SelfTest
                     sawSmallPipeline=true;
             });
             string mixedFolder=Path.Combine(mixedRoot,"pipeline-input");
-            // Selftest is under D: HDD; automatic pipeline must remain disabled
-            // for this same-HDD case. Cross-disk D->E is verified by benchmark.
-            bool shouldUsePipeline=!StorageTopology.IsLikelyHdd(mixedRoot) &&
+            // A CI runner or opaque RAID controller may not expose reliable
+            // spindle/SSD topology. In that case the safe serial path is valid:
+            // lack of a pipeline event must NOT fail the integrity self-test.
+            // The fast path is tested explicitly above, independent of hardware.
+            bool diskAllowsPipeline=!StorageTopology.IsLikelyHdd(mixedRoot) &&
                 !(StorageTopology.IsLikelyHdd(pipelineSource) &&
                   StorageTopology.SameDisk(pipelineSource,mixedRoot));
-            Assert(sawSmallPipeline==shouldUsePipeline &&
-                Directory.GetFiles(mixedFolder).Length==257,
+            string[] mixedSmallFiles=Directory.GetFiles(mixedFolder,"chunk_*.bin");
+            bool mixedSmallFilesIntact=mixedSmallFiles.Length==256 &&
+                mixedSmallFiles.All(path=>PasteEngine.Blake3File(path)==
+                    PasteEngine.Blake3File(Path.Combine(
+                        pipelineSource,Path.GetFileName(path))));
+            Assert((!sawSmallPipeline || diskAllowsPipeline) &&
+                Directory.GetFiles(mixedFolder).Length==257 &&
+                mixedSmallFilesIntact,
                 "Carpeta mixta: 256 chicos + 1 grande, estrategia segura por disco");
             Assert(PasteEngine.Blake3File(Path.Combine(mixedFolder,"mixed-large.bin"))==hash &&
                 File.Exists(mixedLarge),"Carpeta mixta: BLAKE3 grande íntegro, origen conservado");
