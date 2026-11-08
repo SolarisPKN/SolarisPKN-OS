@@ -5,11 +5,13 @@ on:
     paths:
       - "packaging/apt/**"
       - "apt/bootstrap/**"
+      - "instalar-solarispkn-paste.sh"
       - ".github/workflows/solarispkn-easy-install.yml"
   pull_request:
     paths:
       - "packaging/apt/**"
       - "apt/bootstrap/**"
+      - "instalar-solarispkn-paste.sh"
       - ".github/workflows/solarispkn-easy-install.yml"
 
 permissions:
@@ -70,3 +72,37 @@ jobs:
           name: solarispkn-one-click-apt-repository
           path: apt/bootstrap/solarispkn-repository_1.0-1_all.deb
           if-no-files-found: error
+
+
+  shell-installer:
+    name: Full shell installer and signed APT updates (${{ matrix.os }})
+    runs-on: ubuntu-latest
+    container: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["debian:trixie", "ubuntu:24.04"]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install HTTPS downloader and shell verifier
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl
+      - name: Check installer Bash syntax
+        run: |
+          bash -n instalar-solarispkn-paste.sh
+          grep -F 'BOOTSTRAP_SHA256=' instalar-solarispkn-paste.sh
+      - name: Fresh-install Paste and configure the signed repository with one script
+        run: |
+          bash ./instalar-solarispkn-paste.sh
+          test -x /usr/bin/solarispkn-paste
+          test -f /etc/apt/sources.list.d/solarispkn.sources
+          test -s /usr/share/keyrings/solarispkn-archive.asc
+          solarispkn-paste --version
+          apt-cache policy solarispkn-paste
+      - name: Re-run safely without duplicating repository entries
+        run: |
+          bash ./instalar-solarispkn-paste.sh
+          test "$(grep -l '^URIs: https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/apt/' /etc/apt/sources.list.d/solarispkn.sources | wc -l)" = 1
+          test "$(find /etc/apt/sources.list.d -maxdepth 1 -name 'solarispkn*' | wc -l)" = 1
+          solarispkn-paste profile /tmp

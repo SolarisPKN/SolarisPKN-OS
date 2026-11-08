@@ -4,6 +4,26 @@
 
 SolarisPKN-OS es un proyecto modular de investigaciÃ³n de componentes para sistemas operativos. **No es todavÃ­a una distribuciÃ³n ni una imagen lista para instalar.** Cada paquete mantiene sus propios requisitos, versiÃ³n y licencia.
 
+## 📥 Instalar SolarisPKN-Paste en Debian / Ubuntu
+
+**[⬇️ Descargar Paste (.deb) — abrir con el instalador gráfico](https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/apt/pool/main/s/solarispkn-paste/solarispkn-paste_0.3.0~alpha1-1_all.deb)** · **[⬇️ Descargar instalador con actualizaciones (.sh)](https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/instalar-solarispkn-paste.sh)**
+
+Para instalar Paste y agregar su repositorio firmado **de una sola vez**, descargá el script y ejecutalo con:
+
+```bash
+bash instalar-solarispkn-paste.sh
+```
+
+O, si preferís hacerlo directamente desde una terminal (sin ejecutar código remoto por tubería):
+
+```bash
+curl -fsSLo instalar-solarispkn-paste.sh https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/instalar-solarispkn-paste.sh && bash instalar-solarispkn-paste.sh
+```
+
+El script verifica el SHA-256 del paquete que agrega la clave pública y el repositorio APT, pide permisos con `sudo` cuando es necesario, ejecuta `apt update` e instala `solarispkn-paste`. No desactiva la verificación de firmas. **El .deb directo es el camino más cómodo para abrirlo gráficamente**, aunque por sí solo no registra nuestro repositorio de actualizaciones. GitHub permite descargar archivos con un clic, pero por seguridad no ejecuta instaladores en la computadora de sus visitantes.
+
+---
+
 ## EspaÃ±ol
 
 ### Componentes
