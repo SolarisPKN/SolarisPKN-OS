@@ -144,4 +144,4 @@ solarispkn-paste/
 └── README.es.md   Spanish translation
 ~~~
 
-**Licensing:** Third-party Blake3 and b3sum retain upstream terms. No independent SolarisPKN-Paste redistribution license has been selected yet; public repository visibility does not itself grant reuse rights. **Do not use an alpha as the only copy of critical data.**
+**Licensing:** Third-party Blake3 and b3sum retain upstream terms. SolarisPKN-Paste is distributed under GPL-3.0-only (see [LICENSE](LICENSE)). Third-party BLAKE3 implementations and external dependencies retain their individual licenses. Debian packaging is in [debian/](debian/) and must undergo sponsorship review before appearing in the official Debian archive. **Do not use an alpha as the only copy of critical data.**

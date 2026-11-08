@@ -1,0 +1,7 @@
+solarispkn-verity (0.6.0~rc1-1) unstable; urgency=medium
+
+  * Initial Debian packaging for userspace CLI and AF_ALG Merkle tool.
+  * Separate GPL-2.0-only C and MIT Python outputs and record CC0 notices.
+  * Deliberately exclude the experimental kernel BLAKE3 module from binaries.
+
+ -- SolarisPKN <31356753+SolarisPKN@users.noreply.github.com>  Sun, 08 Nov 2026 00:00:00 -0300

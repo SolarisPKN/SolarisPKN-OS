@@ -1,0 +1,18 @@
+#!/usr/bin/make -f
+export PYTHONDONTWRITEBYTECODE=1
+%:
+	dh $@
+
+override_dh_auto_build:
+	:
+
+override_dh_auto_test:
+	python3 -m unittest discover -s linux/tests -p 'test_*.py' -v
+
+override_dh_auto_install:
+	install -d -m 0755 debian/solarispkn-paste/usr/bin
+	install -d -m 0755 debian/solarispkn-paste/usr/lib/python3/dist-packages/solarispkn_paste
+	install -m 0644 linux/solarispkn_paste/__init__.py debian/solarispkn-paste/usr/lib/python3/dist-packages/solarispkn_paste/
+	install -m 0644 linux/solarispkn_paste/cli.py debian/solarispkn-paste/usr/lib/python3/dist-packages/solarispkn_paste/
+	install -m 0755 linux/solarispkn-paste debian/solarispkn-paste/usr/bin/solarispkn-paste
+	sed -i '1c#!/usr/bin/python3' debian/solarispkn-paste/usr/bin/solarispkn-paste

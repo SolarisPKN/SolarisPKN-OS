@@ -1,0 +1,24 @@
+Source: solarispkn-paste
+Section: utils
+Priority: optional
+Maintainer: SolarisPKN <31356753+SolarisPKN@users.noreply.github.com>
+Build-Depends:
+ debhelper-compat (= 13),
+ dh-sequence-python3,
+ python3-all,
+ b3sum
+Standards-Version: 4.7.4
+Rules-Requires-Root: no
+Homepage: https://github.com/SolarisPKN/SolarisPKN-OS/tree/main/solarispkn-paste
+Vcs-Git: https://github.com/SolarisPKN/SolarisPKN-OS.git
+Vcs-Browser: https://github.com/SolarisPKN/SolarisPKN-OS/tree/main/solarispkn-paste
+
+Package: solarispkn-paste
+Architecture: all
+Depends: ${misc:Depends}, ${python3:Depends}, b3sum
+Description: verified, hardware-aware file copy command-line tool
+ SolarisPKN-Paste copies regular files and directories using staged
+ writes, digest comparison and conservative HDD/SSD routing.
+ .
+ This Linux package provides a command-line tool, not the Windows GUI.
+ Advanced metadata, POSIX ACL and power-loss guarantees are experimental.

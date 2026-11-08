@@ -1,0 +1,3 @@
+Tests: cli-smoke
+Depends: @, python3, openssl
+# Exercise actual installed file transfer or Merkle integrity; not only --help.

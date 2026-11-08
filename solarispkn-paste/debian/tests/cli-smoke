@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+solarispkn-paste --help >/dev/null
+solarispkn-paste profile /tmp >/dev/null
+temp="$(mktemp -d)"
+trap 'rm -rf -- "$temp"' EXIT
+printf 'SolarisPKN Debian integrity test\n' > "$temp/input"
+solarispkn-paste copy "$temp/input" "$temp/output" --hash sha256 >/dev/null
+cmp "$temp/input" "$temp/output"
+# Copy cannot silently replace an existing destination.
+if solarispkn-paste copy "$temp/input" "$temp/output" --hash sha256 >/dev/null 2>&1; then
+  echo 'FAIL: existing destination overwritten without opt-in' >&2
+  exit 1
+fi
+cmp "$temp/input" "$temp/output"
+echo 'PASS: installed Paste CLI integrity and conflict safety'

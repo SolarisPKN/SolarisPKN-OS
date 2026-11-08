@@ -1,0 +1,11 @@
+SolarisPKN-Verity in Debian
+==========================
+
+This distribution installs only userspace experimental tools and an
+optional Linux AF_ALG Merkle formatter. It does NOT install the Yocto
+BLAKE3 kernel provider, register AF_ALG algorithms, patch dm-verity,
+enable Secure Boot, alter disks, or mount block devices.
+
+Use a trusted root hash and independently verified boot chain when
+building any dm-verity-based solution. Do not treat the CLI output as
+evidence of a secure boot or a production integrity guarantee.

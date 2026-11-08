@@ -23,9 +23,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#define BLOCK_SIZE 4096U
+#define SPKN_BLOCK_SIZE 4096U
 #define DIGEST_SIZE 32U
-#define HASHES_PER_BLOCK (BLOCK_SIZE / DIGEST_SIZE)
+#define HASHES_PER_BLOCK (SPKN_BLOCK_SIZE / DIGEST_SIZE)
 #define MAX_LEVELS 32U
 #define MAX_SALT 256U
 
@@ -105,7 +105,7 @@ static int layout_init(struct layout *l, uint64_t data_blocks)
 {
     uint64_t n = data_blocks;
     memset(l, 0, sizeof(*l));
-    if (!data_blocks || data_blocks > UINT64_MAX / (BLOCK_SIZE / 512U))
+    if (!data_blocks || data_blocks > UINT64_MAX / (SPKN_BLOCK_SIZE / 512U))
         return -1;
     l->data_blocks = data_blocks;
 
@@ -122,7 +122,7 @@ static int layout_init(struct layout *l, uint64_t data_blocks)
         if (l->count[i] > UINT64_MAX - l->hash_blocks) return -1;
         l->hash_blocks += l->count[i];
     }
-    if (l->hash_blocks > INT64_MAX / BLOCK_SIZE) return -1;
+    if (l->hash_blocks > INT64_MAX / SPKN_BLOCK_SIZE) return -1;
     return 0;
 }
 
@@ -211,7 +211,7 @@ static int tree_process(struct hash_ctx *hc, int data_fd, int hash_fd,
                         const struct layout *l, bool create,
                         unsigned char root[DIGEST_SIZE])
 {
-    unsigned char src[BLOCK_SIZE], block[BLOCK_SIZE], stored[BLOCK_SIZE];
+    unsigned char src[SPKN_BLOCK_SIZE], block[SPKN_BLOCK_SIZE], stored[SPKN_BLOCK_SIZE];
     unsigned char digest[DIGEST_SIZE];
 
     for (uint64_t level = 0; level < l->levels; level++) {
@@ -224,14 +224,14 @@ static int tree_process(struct hash_ctx *hc, int data_fd, int hash_fd,
             for (uint64_t k = 0; k < HASHES_PER_BLOCK; k++) {
                 uint64_t idx = b * HASHES_PER_BLOCK + k;
                 if (idx >= input_count) break;
-                uint64_t bytepos = (input_base + idx) * BLOCK_SIZE;
+                uint64_t bytepos = (input_base + idx) * SPKN_BLOCK_SIZE;
                 if (io_full(input_fd, src, sizeof(src), bytepos, false))
                     return -1;
                 if (hash_one(hc, src, sizeof(src), digest))
                     return -1;
                 memcpy(block + k * DIGEST_SIZE, digest, DIGEST_SIZE);
             }
-            uint64_t output_at = (l->pos[level] + b) * BLOCK_SIZE;
+            uint64_t output_at = (l->pos[level] + b) * SPKN_BLOCK_SIZE;
             if (create) {
                 if (io_full(hash_fd, block, sizeof(block), output_at, true))
                     return -1;
@@ -250,7 +250,7 @@ static int tree_process(struct hash_ctx *hc, int data_fd, int hash_fd,
 
     if (l->levels) {
         uint64_t top = l->pos[l->levels - 1];
-        if (io_full(hash_fd, block, sizeof(block), top * BLOCK_SIZE, false))
+        if (io_full(hash_fd, block, sizeof(block), top * SPKN_BLOCK_SIZE, false))
             return -1;
     } else {
         if (io_full(data_fd, block, sizeof(block), 0, false))
@@ -286,8 +286,8 @@ static int cmd_tree(bool create, const char *alg, const char *data_path,
         perror("Cannot inspect data file");
         goto out;
     }
-    if (bytes == 0 || bytes % BLOCK_SIZE != 0 ||
-        layout_init(&l, bytes / BLOCK_SIZE)) {
+    if (bytes == 0 || bytes % SPKN_BLOCK_SIZE != 0 ||
+        layout_init(&l, bytes / SPKN_BLOCK_SIZE)) {
         fprintf(stderr, "Input must have a positive, 4096-aligned size.\n");
         goto out;
     }
@@ -307,13 +307,13 @@ static int cmd_tree(bool create, const char *alg, const char *data_path,
         // A single-data-block tree has no hash blocks, but requires a
         // nonempty regular backing file if later attached to a loop device.
         uint64_t alloc_blocks = l.hash_blocks ? l.hash_blocks : 1;
-        if (ftruncate(hash_fd, (off_t)(alloc_blocks * BLOCK_SIZE))) {
+        if (ftruncate(hash_fd, (off_t)(alloc_blocks * SPKN_BLOCK_SIZE))) {
             perror("Cannot size hash file");
             goto out;
         }
     } else {
         if (file_size(hash_fd, &tree_bytes) ||
-            tree_bytes < l.hash_blocks * BLOCK_SIZE) {
+            tree_bytes < l.hash_blocks * SPKN_BLOCK_SIZE) {
             fprintf(stderr, "Hash tree is shorter than required.\n");
             goto out;
         }
@@ -376,8 +376,8 @@ static int cmd_table(const char *alg, const char *data, const char *hash,
     if (errno || *end || layout_init(&layout, blocks)) return 2;
     // dmsetup expects: start_sector length_sectors verity version ...
     printf("0 %" PRIu64 " verity 1 %s %s %u %u %" PRIu64
-           " 0 %s ", blocks * (BLOCK_SIZE / 512U), data, hash,
-           BLOCK_SIZE, BLOCK_SIZE, blocks, alg);
+           " 0 %s ", blocks * (SPKN_BLOCK_SIZE / 512U), data, hash,
+           SPKN_BLOCK_SIZE, SPKN_BLOCK_SIZE, blocks, alg);
     print_hex(root, sizeof(root));
     printf(" ");
     if (sl) print_hex(salt, sl);

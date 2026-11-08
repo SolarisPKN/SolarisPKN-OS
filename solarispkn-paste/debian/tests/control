@@ -1,0 +1,3 @@
+Tests: cli-smoke
+Depends: @, python3, b3sum
+# Exercise actual installed file transfer or Merkle integrity; not only --help.

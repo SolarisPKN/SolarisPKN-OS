@@ -1,0 +1,12 @@
+Source package notes
+====================
+
+This source builds the experimental userspace CLI and separately licensed
+Linux AF_ALG Merkle tool, not the Yocto kernel BLAKE3 provider.
+No kernel DKMS module or Secure Boot integration is shipped.
+
+Debian source includes GPL-2.0-only, MIT and CC0-1.0 components.
+Files and THIRD_PARTY.md require final upstream rightsholder verification.
+The GitHub no-reply email is a build-only placeholder: replace it with
+a monitored public maintainer address before soliciting Debian sponsors.
+A separate upstream release tag and working debian/watch are also needed.
