@@ -10,14 +10,14 @@ Un motor de copia con verificación de integridad y selección según CPU, RAM, 
 
 **Windows:** Descargá el instalador autocontenido **SolarisPKN-Paste-Setup.exe** desde los artefactos de la última ejecución correcta de [GitHub Actions](https://github.com/SolarisPKN/SolarisPKN-OS/actions/workflows/solarispkn-paste.yml). Elegí **Standard (solo usuario/HKCU, sin UAC)** o **Advanced (todos los usuarios/HKLM, con UAC)**. El segundo permite copias explícitamente elevadas en carpetas protegidas y muestra los privilegios reales del proceso, pero **el servicio de aceleración privilegiada firmado todavía no está implementado**. Standard conserva FileStream, OVERLAPPED, CopyFile2 y E/S sin búfer cuando el sistema permite esas operaciones. [Matriz real de permisos](docs/WINDOWS-PRIVILEGES-SETUP.md).
 
-**Debian/Ubuntu:** Registrá una vez el [repositorio APT propio y firmado](docs/APT-REPOSITORY.md) y después instalá por nombre:
+**Debian/Ubuntu (instalación fácil):** [Descargá el pequeño instalador del repositorio SolarisPKN](https://github.com/SolarisPKN/SolarisPKN-OS/raw/refs/heads/main/apt/bootstrap/solarispkn-repository_1.0-1_all.deb). Desde Descargas:
 
 ~~~bash
-curl -fL https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/solarispkn-paste/linux/packaging/bootstrap-apt.sh -o bootstrap-solarispkn-paste.sh
-less bootstrap-solarispkn-paste.sh
-sudo bash bootstrap-solarispkn-paste.sh
-sudo apt install solarispkn-paste
+sudo apt install ./solarispkn-repository_1.0-1_all.deb
+sudo apt update && sudo apt install solarispkn-paste
 ~~~
+
+El paquete incorpora la clave pública de firma y la fuente APT con Signed-By, sin curl, GPG ni editar sources.list. [Más detalles y alternativa directa de un solo comando](../packaging/apt/README.md).
 
 Luego las actualizaciones llegan con apt update/upgrade. **No es un repositorio oficial** de Debian/Ubuntu; usa una clave propia verificada y Signed-By sin desactivar las firmas.
 
