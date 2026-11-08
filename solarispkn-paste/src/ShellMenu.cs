@@ -126,6 +126,45 @@ internal static class ShellMenu
         Entries.FirstOrDefault(e=>e.Id==id)?.Help
         ?? throw new ArgumentException("Opción desconocida: " + id);
 
+    // Only used by Windows CI: exercises real HKCU registry structures in an
+    // isolated temporary location, never the live Explorer shell registration.
+    internal static void RegistrySelfTest()
+    {
+        string sandbox=@"Software\SolarisPKN\Paste\ShellMenuTest-"+Guid.NewGuid().ToString("N");
+        try
+        {
+            string testExe=Environment.ProcessPath ?? throw new IOException("EXE path unavailable");
+            Register(Registry.CurrentUser,sandbox,testExe,@"C:\.",machine:true);
+            using var root=Registry.CurrentUser.OpenSubKey(sandbox+@"\"+RootName)
+                ?? throw new IOException("Missing single root menu");
+            if(!string.Equals(root.GetValue("MUIVerb") as string,RootCaption,
+                StringComparison.Ordinal))
+                throw new IOException("Unexpected top-level caption");
+            if(root.OpenSubKey("command") is not null)
+                throw new IOException("Root must not have an immediate paste action");
+            using var submenu=root.OpenSubKey(@"ExtendedSubCommandsKey\shell")
+                ?? throw new IOException("Missing native submenu");
+            if(submenu.GetSubKeyNames().Length!=Entries.Length)
+                throw new IOException("Incorrect submenu action count");
+            foreach(var entry in Entries)
+            {
+                using var item=submenu.OpenSubKey(entry.Id)
+                    ?? throw new IOException("Missing entry " + entry.Id);
+                using var command=item.OpenSubKey("command")
+                    ?? throw new IOException("Missing verb command " + entry.Id);
+                string cmd=command.GetValue("") as string ?? "";
+                if(!cmd.Contains(" "+entry.Args,StringComparison.Ordinal) ||
+                   (entry.Id is "00-paste" or "11-uac") &&
+                   !cmd.Contains(@"C:\.",StringComparison.Ordinal))
+                    throw new IOException("Invalid command " + entry.Id);
+            }
+        }
+        finally
+        {
+            Registry.CurrentUser.DeleteSubKeyTree(sandbox,throwOnMissingSubKey:false);
+        }
+    }
+
     internal static void SelfTest()
     {
         if(Entries.Length<10 || Entries[0].Id!="00-paste" ||
