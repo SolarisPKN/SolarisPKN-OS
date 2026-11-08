@@ -1,0 +1,18 @@
+Package: solarispkn-paste
+Version: 0.3.0~alpha1-1
+Architecture: all
+Maintainer: SolarisPKN Labs
+Depends: python3 (>= 3.10), b3sum
+Filename: pool/main/s/solarispkn-paste/solarispkn-paste_0.3.0~alpha1-1_all.deb
+Size: 12160
+MD5sum: dc5084235bfcfb74ed781df348bc97e6
+SHA1: 8eb92d5c0eb0689031f7fb8e0d734bac51849aec
+SHA256: 66f1231477e006c6b9ce81a967d05bcec8032787eb1c10be9cea99a04e475562
+Section: utils
+Priority: optional
+Homepage: https://github.com/SolarisPKN/SolarisPKN-OS
+Description: SolarisPKN-Paste experimental verified Linux copy CLI
+ Atomic staging, BLAKE3 verification using b3sum, conservative
+ HDD/SSD/RAID-aware routing and bounded synthetic benchmarking.
+ This preview does not provide Windows Explorer integration on Linux.
+

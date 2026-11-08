@@ -6,6 +6,21 @@
 
 Un motor de copia con verificación de integridad y selección según CPU, RAM, HDD, SSD y RAID. Son **dos implementaciones diferentes**: Windows (.NET 10 WinForms con Explorador) y Linux (CLI Python 3 empaquetada como .deb para Debian/Ubuntu).
 
+## 📥 Instalación rápida
+
+**Windows:** Descargá el instalador autocontenido **SolarisPKN-Paste-Setup.exe** desde los artefactos de la última ejecución correcta de [GitHub Actions](https://github.com/SolarisPKN/SolarisPKN-OS/actions/workflows/solarispkn-paste.yml). Elegí **Standard (solo usuario/HKCU, sin UAC)** o **Advanced (todos los usuarios/HKLM, con UAC)**. El segundo permite copias explícitamente elevadas en carpetas protegidas y muestra los privilegios reales del proceso, pero **el servicio de aceleración privilegiada firmado todavía no está implementado**. Standard conserva FileStream, OVERLAPPED, CopyFile2 y E/S sin búfer cuando el sistema permite esas operaciones. [Matriz real de permisos](docs/WINDOWS-PRIVILEGES-SETUP.md).
+
+**Debian/Ubuntu:** Registrá una vez el [repositorio APT propio y firmado](docs/APT-REPOSITORY.md) y después instalá por nombre:
+
+~~~bash
+curl -fL https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/solarispkn-paste/linux/packaging/bootstrap-apt.sh -o bootstrap-solarispkn-paste.sh
+less bootstrap-solarispkn-paste.sh
+sudo bash bootstrap-solarispkn-paste.sh
+sudo apt install solarispkn-paste
+~~~
+
+Luego las actualizaciones llegan con apt update/upgrade. **No es un repositorio oficial** de Debian/Ubuntu; usa una clave propia verificada y Signed-By sin desactivar las firmas.
+
 ![Cómo funciona la copia](docs/assets/copy-flow.svg)
 
 ## 🧠 Funciones
