@@ -338,6 +338,12 @@ internal sealed class PasteWindow : Form
 internal sealed class SettingsWindow : Form
 {
     readonly PasteOptions _options=PasteOptions.Load();
+    // Delayed explanatory hover (only inside our WinForms UI, not Explorer's menu).
+    readonly ToolTip _optionHelp=new()
+    {
+        InitialDelay=2000, ReshowDelay=350, AutoPopDelay=20000,
+        ShowAlways=true, IsBalloon=true
+    };
     readonly CheckBox _delete=new(){Text="Borrar huérfanos del DESTINO",AutoSize=true};
     readonly CheckBox _newer=new(){Text="Pegar solo los más recientes",AutoSize=true};
     readonly CheckBox _older=new(){Text="Pegar solo los más antiguos (rollback)",AutoSize=true};
@@ -394,6 +400,38 @@ internal sealed class SettingsWindow : Form
         _newer.CheckedChanged+=(s,e)=>{if(_newer.Checked)_older.Checked=false;};
         _older.CheckedChanged+=(s,e)=>{if(_older.Checked)_newer.Checked=false;};
         _hotkey.Text="Atajo: "+_options.Hotkey;
+        foreach(var (control,help) in new (Control Control,string Help)[]
+        {
+            (_delete,ShellMenu.HelpFor("01-delete")),
+            (_newer,ShellMenu.HelpFor("02-newer")),
+            (_older,ShellMenu.HelpFor("03-older")),
+            (_hash,ShellMenu.HelpFor("04-blake3")),
+            (_size,ShellMenu.HelpFor("05-size")),
+            (_existing,ShellMenu.HelpFor("06-existing")),
+            (_ask,ShellMenu.HelpFor("08-ask")),
+            (_antifrag,ShellMenu.HelpFor("09-antifrag")),
+            (_noConfirm,ShellMenu.HelpFor("99-noconfirm")),
+            (_fast,"Activa el motor rápido de transferencia asíncrona cuando es apropiado para el dispositivo."),
+            (_adaptiveSsd,"Ruta experimental SSD a SSD para archivos nuevos grandes; nunca garantiza ser más rápida."),
+            (_adaptiveNvmeLarge,"Ruta experimental para archivos nuevos grandes en el mismo NVMe. Requiere pruebas del equipo."),
+            (_adaptiveNvmeSmall,"Ajusta la cantidad de escritores de archivos pequeños en NVMe; opción experimental."),
+            (_hardwareProfile,"Detecta CPU, memoria y discos para limitar la concurrencia automáticamente."),
+            (_usbAlerts,"Muestra consejos sobre la velocidad y conexión USB desde el residente en bandeja."),
+            (_usbFirstTime,"Muestra un consejo al detectar por primera vez un nuevo modelo de dispositivo USB."),
+            (_small,"Activa el modo optimizado para muchos archivos de hasta 64 KiB."),
+            (_pipeline,"Canaliza lectura y escritura de archivos pequeños entre discos diferentes."),
+            (_reuse,"Reutiliza el handle temporal al verificar BLAKE3 para reducir operaciones redundantes."),
+            (_durableSmall,"Aumenta los vaciados físicos por archivo pequeño; mayor seguridad ante cortes, con menor rendimiento."),
+            (_preallocate,"Reserva espacio al comienzo cuando el dispositivo y el sistema de archivos lo permiten."),
+            (_showHardware,"Abre el diagnóstico de discos, CPU, RAM y la estrategia de transferencia."),
+            (_showCapabilities,"Muestra los privilegios activos; administrador no significa más velocidad automáticamente."),
+            (_buffer,"Ajusta la memoria de transferencia usada por operación."),
+            (_writers,"Cantidad de escritores concurrentes en SSD/NVMe; cero deja que el motor elija."),
+            (_progressMode,"Visual actualiza el gráfico frecuentemente; Ultra minimiza el costo de actualización."),
+            (_hotkey,"Configurá la combinación para lanzar Paste desde teclado o botón lateral del mouse.")
+        })
+            _optionHelp.SetToolTip(control,help);
+
         var panel=new FlowLayoutPanel(){Dock=DockStyle.Fill,FlowDirection=FlowDirection.TopDown,
             WrapContents=false,AutoScroll=true,Padding=new Padding(15)};
         panel.Controls.Add(new Label(){Text="Varios filtros de comparación actúan con lógica AND.",AutoSize=true});
@@ -461,6 +499,7 @@ internal sealed class SettingsWindow : Form
             _hash.Checked=false;_size.Checked=false;_existing.Checked=false;
         };
         panel.Controls.Add(only);
+        _optionHelp.SetToolTip(only,ShellMenu.HelpFor("07-simple"));
         panel.Controls.Add(new Label(){Text="Atajo global (si se inicia el residente de bandeja):",AutoSize=true,Margin=new Padding(7,12,0,3)});
         panel.Controls.Add(_hotkey);
         _hotkey.Click+=(s,e)=>{_hotkey.Text="Presioná combinación o botón lateral del mouse. ESC cancela.";_hotkey.Focus();};
