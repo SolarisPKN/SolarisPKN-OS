@@ -12,6 +12,21 @@ It has no maintainer scripts, privileged services, apt-key calls, or global
 trust configuration. The key fingerprint is
 4354 DE17 EC84 DE9B DFC3 23C3 8C5E 6F58 AD1B 01DA.
 
+## Quickest way: a single script or a graphical .deb download
+
+- **[Download SolarisPKN-Paste .deb (graphical install)](https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/apt/pool/main/s/solarispkn-paste/solarispkn-paste_0.3.0~alpha1-1_all.deb)**: download and open in a GUI package installer when supported. This does not configure the optional third-party APT repository.
+- **[Download the all-in-one installer script](https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/instalar-solarispkn-paste.sh)**: save the script and run `bash instalar-solarispkn-paste.sh`. It configures a scoped, signed third-party APT repo and installs Paste, so future updates arrive through APT.
+
+One-line download + execution, without piping a remote response into a root shell:
+
+```bash
+curl -fsSLo instalar-solarispkn-paste.sh https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/instalar-solarispkn-paste.sh && bash instalar-solarispkn-paste.sh
+```
+
+The script validates the bootstrap .deb against pinned SHA-256 `eb20a79a0407e1178f4ad21eb1dff4c2f00ff1a09b77b517707d00384162905d`, runs `apt-get update` and installs `solarispkn-paste`. It does not run a blanket system upgrade or disable APT signature checks. It supports Debian/Ubuntu amd64 and arm64.
+
+Clicking a GitHub download link cannot execute code on a visitor's computer. The user approves installation locally using the GUI installer or terminal.
+
 ## Simple installation
 
 Download solarispkn-repository_1.0-1_all.deb from:
