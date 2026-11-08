@@ -6,6 +6,20 @@
 
 Hardware-aware, integrity-verified file copying with **separate** Windows and Linux implementations.
 
+### 🐧 One-step Linux install
+
+**[⬇️ DOWNLOAD PASTE (.deb) — graphical package installer](https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/apt/pool/main/s/solarispkn-paste/solarispkn-paste_0.3.0~alpha1-1_all.deb)** — download and open with your distro package installer. Does not configure future SolarisPKN APT updates.
+
+**[⬇️ DOWNLOAD INSTALLER WITH APT UPDATES (.sh)](https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/instalar-solarispkn-paste.sh)** — download the script, then run `bash instalar-solarispkn-paste.sh` in the download directory. The script installs Paste and configures its signed APT repository.
+
+Single terminal command:
+
+```bash
+curl -fsSLo instalar-solarispkn-paste.sh https://raw.githubusercontent.com/SolarisPKN/SolarisPKN-OS/main/instalar-solarispkn-paste.sh && bash instalar-solarispkn-paste.sh
+```
+
+The script pins the archive bootstrap package SHA-256 and APT verifies signed repository metadata. It requests sudo access only if required. GitHub can offer a download button, but it cannot silently launch a privileged process on a visitor's PC.
+
 ## 📥 Quick installation
 
 **Windows:** Download the experimental, self-contained **SolarisPKN-Paste-Setup.exe** from the Windows artifact of the latest successful [GitHub Actions run](https://github.com/SolarisPKN/SolarisPKN-OS/actions/workflows/solarispkn-paste.yml). Launch it and choose **Standard (per-user/HKCU, no UAC)** or **Advanced installation (all-users/HKLM, UAC)**. The advanced mode permits explicitly elevated protected-directory copy and reads available process-token privileges; a privileged signed acceleration service is **not yet implemented**. Standard user operations can still use Windows' efficient FileStream, OVERLAPPED, CopyFile2 and unbuffered I/O APIs where appropriate. [Detailed privilege matrix](docs/WINDOWS-PRIVILEGES-SETUP.md).
