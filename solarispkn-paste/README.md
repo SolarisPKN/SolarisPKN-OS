@@ -37,6 +37,12 @@ Updates then use normal apt update/upgrade. This is **not** part of official Deb
 
 **Scope:** Linux has no Windows Explorer or WinForms GUI integration. Linux does **not yet** fully preserve POSIX ACL, xattrs, SELinux labels, hardlinks, sparse layout or complete directory rollback. RAID queuing does not defragment data.
 
+## 🖱️ Cleaner Explorer menu and explanatory hover
+
+Windows classic context menu has **one root entry**: **SolarisPKN-Paste · Pegar ▸**, with all actions nested (including settings and explicit UAC paste). In **Settings**, holding the pointer on an option for **2 seconds** displays an explanation.
+
+The submenu opening delay is controlled by Windows; **an exact 3-second delay or Explorer menu-row tooltips are not implemented** without the future COM integration. Re-run the installer to migrate an existing installation. [Design and limitations (ES)](docs/SHELL-UX-ONE-ENTRY.md).
+
 ## 🪟 Windows build / installation
 
 Requires Windows 10/11 x64 and .NET 10 SDK:
