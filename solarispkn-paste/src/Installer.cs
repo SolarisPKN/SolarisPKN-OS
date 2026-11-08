@@ -68,61 +68,11 @@ internal static class Installer
         foreach(var baseKey in Bases)
         {
             string operand=baseKey.Contains("Background",StringComparison.Ordinal)?"%V\\.":"%1\\.";
-            // Sufijo de directorio . evita el problema de escape de comillas con rutas C:\ de raíz.
-            AddVerb(baseKey,@"SolarisPKN-Paste","SolarisPKN-Paste",
-                "\""+exe+"\" --paste \""+operand+"\"",exe);
-            using var parent=Registry.CurrentUser.CreateSubKey(baseKey+@"\SolarisPKN-Paste-Options",true);
-            if(parent is null)throw new IOException("Error creando submenú");
-            parent.SetValue("MUIVerb","SolarisPKN-Paste · Opciones");
-            parent.SetValue("Icon",exe);
-            parent.SetValue("SubCommands","");
-            foreach(var (id,arg) in MenuActions)
-            {
-                using var item=parent.CreateSubKey(@"shell\"+id,true);
-                if(item is null)throw new IOException("Error creando subcomando "+id);
-                using var command=item.CreateSubKey("command",true);
-                command?.SetValue("","\""+exe+"\" "+arg);
-            }
-        }
-        UpdateMenus();
-    }
-    static readonly (string Id,string Args)[] MenuActions={
-        ("01-delete","--toggle DeleteOrphans"),
-        ("02-newer","--toggle NewerOnly"),
-        ("03-older","--toggle OlderOnly"),
-        ("04-blake3","--toggle HashDifferent"),
-        ("05-size","--toggle SizeDifferent"),
-        ("06-existing","--toggle ExistingOnly"),
-        ("07-simple","--only-paste"),
-        ("08-ask","--toggle AskOnConflict"),
-        ("09-antifrag","--toggle AntiFrag"),
-        ("10-settings","--settings"),
-        ("99-noconfirm","--toggle NoConfirm")
-    };
-    public static void UpdateMenus()
-    {
-        var opts=PasteOptions.Load();
-        var labels=new Dictionary<string,string>{
-            ["01-delete"]=Label(opts.DeleteOrphans,"Borrar huérfanos"),
-            ["02-newer"]=Label(opts.NewerOnly,"Pegar más recientes"),
-            ["03-older"]=Label(opts.OlderOnly,"Pegar más antiguos"),
-            ["04-blake3"]=Label(opts.HashDifferent,"Comparar BLAKE3"),
-            ["05-size"]=Label(opts.SizeDifferent,"Comparar tamaño"),
-            ["06-existing"]=Label(opts.ExistingOnly,"Solo archivos existentes"),
-            ["07-simple"]="Solo pegar (apagar 6 filtros)",
-            ["08-ask"]=Label(opts.AskOnConflict,"Preguntar conflictos"),
-            ["09-antifrag"]=Label(opts.AntiFrag,"Antifrag por unidad"),
-            ["10-settings"]="Configuración avanzada...",
-            ["99-noconfirm"]=Label(opts.NoConfirm,"⚠ PEGAR SIN CONFIRMAR")
-        };
-        foreach(var baseKey in Bases)
-        foreach(var pair in labels)
-        {
-            using var item=Registry.CurrentUser.OpenSubKey(baseKey+@"\SolarisPKN-Paste-Options\shell\"+pair.Key,true);
-            item?.SetValue("",pair.Value);
+            ShellMenu.Register(Registry.CurrentUser,baseKey,exe,operand,machine:false);
         }
     }
-    static string Label(bool selected,string text)=>(selected?"☑  ":"☐  ")+text;
+    public static void UpdateMenus() => ShellMenu.UpdateUserLabels(PasteOptions.Load());
+
     public static void Toggle(string option)
     {
         var o=PasteOptions.Load();
@@ -147,15 +97,6 @@ internal static class Installer
         o.Save();UpdateMenus();
     }
     public static void OnlyPaste(){var o=PasteOptions.Load();o.SetOnlyPaste();o.Save();UpdateMenus();}
-    static void AddVerb(string baseKey,string keyName,string label,string command,string exe)
-    {
-        using var key=Registry.CurrentUser.CreateSubKey(baseKey+@"\"+keyName,true) ??
-            throw new IOException("No se pudo registrar "+keyName);
-        key.SetValue("",label);
-        key.SetValue("Icon",exe);
-        using var sub=key.CreateSubKey("command",true)??throw new IOException("Sin command");
-        sub.SetValue("",command);
-    }
     public static void Uninstall()
     {
         if(MessageBox.Show("¿Desinstalar SolarisPKN-Paste para esta cuenta?\n"+
