@@ -8,9 +8,12 @@ SolarisPKN-OS es un proyecto modular de investigaciÃ³n de componentes para sis
 
 ### Componentes
 
+**Nuevo (vista previa multiplataforma):** [SolarisPKN-Paste](solarispkn-paste/) — motor experimental de copias verificadas: Explorador Windows 10/11 y CLI Linux Debian/Ubuntu con paquete .deb. [Documentación en español](solarispkn-paste/README.es.md).
+
 | Paquete | VersiÃ³n | Estado |
 | --- | --- | --- |
 | [SolarisPKN-Verity](solarispkn-verity/) | `0.6.0-rc1` | **Vista previa experimental de fuentes; no apta para producciÃ³n** |
+| [SolarisPKN-Paste](solarispkn-paste/) | Windows 0.2.0-alpha.8 / Linux 0.3.0-alpha.1 | **Vista previa experimental; Debian 13 probado, Ubuntu y QA física pendientes** |
 
 **SolarisPKN-Verity** implementa un proveedor externo de BLAKE3 para la **Linux Crypto API (`shash`)**, utilizable por el **dm-verity original del kernel**; no reemplaza el motor de verificaciÃ³n de bloques. Incluye ademÃ¡s un generador de Ã¡rboles Merkle, una CLI Python experimental, pruebas AF_ALG e integraciÃ³n Yocto.
 
@@ -49,6 +52,7 @@ SolarisPKN-OS is a modular operating-system component research project, **not ye
 | Package | Version | Status |
 | --- | --- | --- |
 | [SolarisPKN-Verity](solarispkn-verity/) | `0.6.0-rc1` | **Experimental source preview; not production-ready** |
+| [SolarisPKN-Paste](solarispkn-paste/) | Windows 0.2.0-alpha.8 / Linux 0.3.0-alpha.1 | **Experimental Windows Explorer/WinForms engine + native Debian/Ubuntu CLI .deb; Debian 13 QA passed, Ubuntu/GUI QA pending** |
 
 SolarisPKN-Verity supplies an external **BLAKE3 Linux Crypto API (`shash`) provider** for **upstream dm-verity**, plus experimental Merkle-tree tooling, a Python CLI, AF_ALG checks and Yocto layers. It does **not** replace the kernel's dm-verity block target.
 

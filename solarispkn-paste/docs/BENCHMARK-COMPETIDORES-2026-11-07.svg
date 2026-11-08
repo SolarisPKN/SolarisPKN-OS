@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="800" viewBox="0 0 1000 800">
+<rect width="1000" height="800" fill="#101924"/>
+<text x="34" y="42" font-family="Segoe UI,Arial" font-size="26" font-weight="700" fill="#f4f8fb">SolarisPKN-Paste vs FastCopy vs TeraCopy</text>
+<text x="34" y="68" font-family="Segoe UI,Arial" font-size="15" fill="#a8bac8">Pruebas 7 nov 2026 | Menor tiempo es mejor | Copia con verificacion integrada/configurada</text><rect x="30" y="95" width="940" height="204" rx="16" fill="#1b2938" stroke="#35485b" stroke-width="1"/>
+ <text x="51" y="126" font-family="Segoe UI,Arial" font-size="21" font-weight="700" fill="#f0f6fc">6.000 archivos pequeños</text>
+ <text x="51" y="148" font-family="Segoe UI,Arial" font-size="13" fill="#a8bac8">61.440.000 bytes | D: HDD -&gt; E: SSD | 2 pasadas</text><text x="54" y="189" font-family="Segoe UI,Arial" font-size="17" fill="#e0eaf2">FastCopy</text>
+  <rect x="217" y="171" width="590" height="24" rx="5" fill="#344456"/>
+  <rect x="217" y="171" width="467.2" height="24" rx="5" fill="#61dd94"/>
+  <text x="826" y="189" font-family="Segoe UI,Arial" font-size="16" font-weight="700" fill="#f5f8fa">19.21 s</text>
+  <title>FastCopy | 6.000 archivos pequeños | 19.294 / 19.128 s</title><text x="54" y="228" font-family="Segoe UI,Arial" font-size="17" fill="#e0eaf2">SolarisPKN</text>
+  <rect x="217" y="210" width="590" height="24" rx="5" fill="#344456"/>
+  <rect x="217" y="210" width="488.6" height="24" rx="5" fill="#5edaf0"/>
+  <text x="826" y="228" font-family="Segoe UI,Arial" font-size="16" font-weight="700" fill="#f5f8fa">20.09 s</text>
+  <title>SolarisPKN | 6.000 archivos pequeños | 20.652 / 19.524 s</title><text x="54" y="267" font-family="Segoe UI,Arial" font-size="17" fill="#e0eaf2">TeraCopy</text>
+  <rect x="217" y="249" width="590" height="24" rx="5" fill="#344456"/>
+  <rect x="217" y="249" width="590.0" height="24" rx="5" fill="#ffbf74"/>
+  <text x="826" y="267" font-family="Segoe UI,Arial" font-size="16" font-weight="700" fill="#f5f8fa">24.26 s</text>
+  <title>TeraCopy | 6.000 archivos pequeños | 24.701 / 23.815 s</title><rect x="30" y="316" width="940" height="204" rx="16" fill="#1b2938" stroke="#35485b" stroke-width="1"/>
+ <text x="51" y="347" font-family="Segoe UI,Arial" font-size="21" font-weight="700" fill="#f0f6fc">1 GiB</text>
+ <text x="51" y="369" font-family="Segoe UI,Arial" font-size="13" fill="#a8bac8">1.073.741.824 bytes | D: HDD -&gt; E: SSD | 2 pasadas</text><text x="54" y="410" font-family="Segoe UI,Arial" font-size="17" fill="#e0eaf2">TeraCopy</text>
+  <rect x="217" y="392" width="590" height="24" rx="5" fill="#344456"/>
+  <rect x="217" y="392" width="482.7" height="24" rx="5" fill="#ffbf74"/>
+  <text x="826" y="410" font-family="Segoe UI,Arial" font-size="16" font-weight="700" fill="#f5f8fa">7.91 s</text>
+  <title>TeraCopy | 1 GiB | 8.047 / 7.766 s</title><text x="54" y="449" font-family="Segoe UI,Arial" font-size="17" fill="#e0eaf2">SolarisPKN</text>
+  <rect x="217" y="431" width="590" height="24" rx="5" fill="#344456"/>
+  <rect x="217" y="431" width="517.0" height="24" rx="5" fill="#5edaf0"/>
+  <text x="826" y="449" font-family="Segoe UI,Arial" font-size="16" font-weight="700" fill="#f5f8fa">8.47 s</text>
+  <title>SolarisPKN | 1 GiB | 11.682 / 5.254 s</title><text x="54" y="488" font-family="Segoe UI,Arial" font-size="17" fill="#e0eaf2">FastCopy</text>
+  <rect x="217" y="470" width="590" height="24" rx="5" fill="#344456"/>
+  <rect x="217" y="470" width="590.0" height="24" rx="5" fill="#61dd94"/>
+  <text x="826" y="488" font-family="Segoe UI,Arial" font-size="16" font-weight="700" fill="#f5f8fa">9.66 s</text>
+  <title>FastCopy | 1 GiB | 10.069 / 9.258 s</title><rect x="30" y="537" width="940" height="204" rx="16" fill="#1b2938" stroke="#35485b" stroke-width="1"/>
+ <text x="51" y="568" font-family="Segoe UI,Arial" font-size="21" font-weight="700" fill="#f0f6fc">10 GB (decimal)</text>
+ <text x="51" y="590" font-family="Segoe UI,Arial" font-size="13" fill="#a8bac8">10.000.000.000 bytes | D: HDD -&gt; E: SSD | 1 pasada</text><text x="54" y="631" font-family="Segoe UI,Arial" font-size="17" fill="#e0eaf2">FastCopy</text>
+  <rect x="217" y="613" width="590" height="24" rx="5" fill="#344456"/>
+  <rect x="217" y="613" width="496.7" height="24" rx="5" fill="#61dd94"/>
+  <text x="826" y="631" font-family="Segoe UI,Arial" font-size="16" font-weight="700" fill="#f5f8fa">81.20 s</text>
+  <title>FastCopy | 10 GB (decimal) | 81.202 s</title><text x="54" y="670" font-family="Segoe UI,Arial" font-size="17" fill="#e0eaf2">TeraCopy</text>
+  <rect x="217" y="652" width="590" height="24" rx="5" fill="#344456"/>
+  <rect x="217" y="652" width="544.2" height="24" rx="5" fill="#ffbf74"/>
+  <text x="826" y="670" font-family="Segoe UI,Arial" font-size="16" font-weight="700" fill="#f5f8fa">88.98 s</text>
+  <title>TeraCopy | 10 GB (decimal) | 88.976 s</title><text x="54" y="709" font-family="Segoe UI,Arial" font-size="17" fill="#e0eaf2">SolarisPKN</text>
+  <rect x="217" y="691" width="590" height="24" rx="5" fill="#344456"/>
+  <rect x="217" y="691" width="590.0" height="24" rx="5" fill="#5edaf0"/>
+  <text x="826" y="709" font-family="Segoe UI,Arial" font-size="16" font-weight="700" fill="#f5f8fa">96.46 s</text>
+  <title>SolarisPKN | 10 GB (decimal) | 96.457 s</title><text x="34" y="777" font-family="Segoe UI,Arial" font-size="14" fill="#a8bac8">Sinteticos; BLAKE3 (Solaris), /verify (FastCopy), TestAlways=1 (TeraCopy). Algoritmos no identicos.</text></svg>
