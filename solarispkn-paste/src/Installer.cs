@@ -20,9 +20,11 @@ internal static class Installer
     static string UninstallReg => @"Software\Microsoft\Windows\CurrentVersion\Uninstall\SolarisPKN-Paste";
     static string RunReg => @"Software\Microsoft\Windows\CurrentVersion\Run";
 
-    public static void Install(bool? startTrayOverride=null)
+    public static void Install(bool? startTrayOverride=null, bool alreadyApproved=false)
     {
-        if(MessageBox.Show("¿Instalar SolarisPKN-Paste para esta cuenta?\n"+
+        // Clicking "Instalar" inside the wizard IS explicit user approval.
+        // Only the bare --install CLI flow needs its own additional prompt.
+        if(!alreadyApproved && MessageBox.Show("¿Instalar SolarisPKN-Paste para esta cuenta?\n"+
             "Se copiará a tu AppData local y se agregarán comandos al menú contextual clásico del Explorador.\n"+
             "No se ejecutará ningún pegado ni borrado.", "Instalar SolarisPKN-Paste",
             MessageBoxButtons.YesNo,MessageBoxIcon.Question)!=DialogResult.Yes)return;
@@ -32,6 +34,18 @@ internal static class Installer
         if(!string.Equals(Path.GetFullPath(src),Path.GetFullPath(InstalledExe),StringComparison.OrdinalIgnoreCase))
             File.Copy(src,InstalledExe,true);
         RegisterShell(InstalledExe);
+        // Detect stale/partially migrated shell commands immediately. The classic
+        // menu must point at the newly installed EXE, never an old custom path.
+        foreach(string baseKey in Bases)
+        {
+            using var command=Registry.CurrentUser.OpenSubKey(baseKey+
+                @"\SolarisPKN-Paste\ExtendedSubCommandsKey\shell\00-paste\command");
+            string actual=Convert.ToString(command?.GetValue("")) ?? "";
+            if(!actual.StartsWith("\"" + InstalledExe + "\" --paste ",
+                    StringComparison.OrdinalIgnoreCase))
+                throw new IOException("El menú del Explorador no quedó asociado al Paste actualizado: "+
+                    baseKey+" (ruta antigua o registro incompleto).");
+        }
         // Inventory and CPU-only calibration after explicit install approval;
         // never benchmark/remove/write to attached USB or other disks.
         HardwareAutoProfiler.RefreshSafe();
@@ -40,7 +54,7 @@ internal static class Installer
             if(key is not null)
             {
                 key.SetValue("DisplayName","SolarisPKN-Paste");
-                key.SetValue("DisplayVersion","0.1.0");
+                key.SetValue("DisplayVersion","0.3.0-alpha.2");
                 key.SetValue("Publisher","SolarisPKN");
                 key.SetValue("InstallLocation",InstallFolder);
                 key.SetValue("DisplayIcon",InstalledExe);
