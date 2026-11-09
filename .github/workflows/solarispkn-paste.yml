@@ -97,7 +97,7 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $dir = "solarispkn-paste/out/windows"
           Copy-Item "$dir/SolarisPKN-Paste.exe" "$dir/SolarisPKN-Paste-Setup.exe"
-          foreach ($check in @("--installer-selftest", "--capabilities-test", "--shell-registry-test")) {
+          foreach ($check in @("--installer-selftest", "--capabilities-test", "--shell-registry-test", "--clipboard-integration-test")) {
             $proc = Start-Process -FilePath "$dir/SolarisPKN-Paste-Setup.exe" -ArgumentList $check -Wait -PassThru
             if ($proc.ExitCode -ne 0) { exit $proc.ExitCode }
           }
