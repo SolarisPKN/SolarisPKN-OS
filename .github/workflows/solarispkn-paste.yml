@@ -100,6 +100,13 @@ jobs:
           foreach ($check in @("--installer-selftest", "--capabilities-test", "--shell-registry-test", "--clipboard-integration-test")) {
             $proc = Start-Process -FilePath "$dir/SolarisPKN-Paste-Setup.exe" -ArgumentList $check -Wait -PassThru
             if ($proc.ExitCode -ne 0) { exit $proc.ExitCode }
+            if ($check -eq "--clipboard-integration-test") {
+              $report = Join-Path $env:LOCALAPPDATA "SolarisPKN\Paste\clipboard-integration-test.txt"
+              if (-not (Test-Path -LiteralPath $report)) { throw "Clipboard integration report missing" }
+              $out = Get-Content -LiteralPath $report -Raw
+              Write-Output $out
+              if (-not $out.Contains("Total: 7 PASS, 0 FAIL")) { throw "Clipboard integration incomplete" }
+            }
           }
       - name: Upload unsigned Windows setup EXE
         uses: actions/upload-artifact@v4
