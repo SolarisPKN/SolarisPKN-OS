@@ -301,7 +301,7 @@ internal sealed class InstallModeWizard : Form
             try
             {
                 if(machine.Checked)WindowsSetup.MachineInstall(startup.Checked);
-                else Installer.Install(startup.Checked);
+                else Installer.Install(startup.Checked,alreadyApproved:true);
                 Close();
             }
             catch(Exception ex)
