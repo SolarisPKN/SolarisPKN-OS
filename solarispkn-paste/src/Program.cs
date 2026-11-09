@@ -33,6 +33,7 @@ internal static class Program
                     break;
                 case "--installer-selftest": WindowsSetup.InstallerSelfTest(); break;
                 case "--shell-registry-test": ShellMenu.RegistrySelfTest(); break;
+                case "--clipboard-integration-test": ClipboardIntegrationSelfTest.Run(); break;
                 case "--capabilities-test": WindowsCapabilities.SelfTest(); break;
                 case "--toggle": if(args.Length<2)throw new ArgumentException("Falta opción");Installer.Toggle(args[1]);break;
                 case "--only-paste": Installer.OnlyPaste();break;
@@ -99,6 +100,7 @@ internal static class Program
                 x.Equals("--usb-advisor-test",StringComparison.OrdinalIgnoreCase) ||
                 x.Equals("--installer-selftest",StringComparison.OrdinalIgnoreCase) ||
                 x.Equals("--shell-registry-test",StringComparison.OrdinalIgnoreCase) ||
+                x.Equals("--clipboard-integration-test",StringComparison.OrdinalIgnoreCase) ||
                 x.Equals("--capabilities-test",StringComparison.OrdinalIgnoreCase) ||
                 x.Equals("--updates-selftest",StringComparison.OrdinalIgnoreCase)))
             {
@@ -122,24 +124,53 @@ internal static class Program
 
 internal static class ClipboardInput
 {
-    public static (List<string> Paths,bool Cut) Snapshot()
+    // Production and tests parse the SAME FileDrop/Preferred DropEffect data.
+    // No clipboard paths are recorded in diagnostic files.
+    internal static (List<string> Paths,bool Cut) FromDataObject(IDataObject? data)
     {
-        if(!Clipboard.ContainsFileDropList())throw new InvalidOperationException("Copiá o cortá archivos/carpetas en el Explorador primero.");
-        StringCollection list=Clipboard.GetFileDropList();
-        var source=list.Cast<string>().Where(x=>!string.IsNullOrWhiteSpace(x)).ToList();
-        bool cut=false;
-        var obj=Clipboard.GetDataObject();
-        if(obj?.GetDataPresent("Preferred DropEffect")==true)
+        if(data is null || !data.GetDataPresent(DataFormats.FileDrop))
+            throw new InvalidOperationException(
+                "El portapapeles no contiene archivos del Explorador. Seleccioná un archivo o carpeta, presioná Ctrl+C y elegí «Pegar ahora» en el destino.");
+
+        object? raw=data.GetData(DataFormats.FileDrop);
+        var paths=raw switch
         {
-            object? v=obj.GetData("Preferred DropEffect",false);
-            byte[]? data=v switch {
-                MemoryStream mem=>mem.ToArray(),
-                byte[] b=>b,
-                _=>null
+            string[] a => a,
+            StringCollection collection => collection.Cast<string>().ToArray(),
+            _ => Array.Empty<string>()
+        };
+        var source=paths.Where(p=>!string.IsNullOrWhiteSpace(p)).Distinct(
+            StringComparer.OrdinalIgnoreCase).ToList();
+        if(source.Count==0)
+            throw new InvalidOperationException(
+                "El portapapeles tiene FileDrop, pero no contiene rutas de archivos compatibles.");
+
+        bool cut=false;
+        if(data.GetDataPresent("Preferred DropEffect"))
+        {
+            object? rawEffect=data.GetData("Preferred DropEffect",false);
+            byte[]? effect=rawEffect switch
+            {
+                MemoryStream ms => ms.ToArray(),
+                byte[] bytes => bytes,
+                _ => null
             };
-            if(data is { Length:>=4 }) cut=(BitConverter.ToInt32(data,0)&2)!=0;
+            if(effect is { Length:>=4 })
+                cut=(BitConverter.ToInt32(effect,0)&2)!=0;
         }
         return (source,cut);
+    }
+
+    public static (List<string> Paths,bool Cut) Snapshot()
+    {
+        // Explorer, OneDrive and other shell providers may hold the Windows
+        // clipboard momentarily. Retry ONLY genuine COM clipboard contention.
+        for(int attempt=0;attempt<4;attempt++)
+        {
+            try { return FromDataObject(Clipboard.GetDataObject()); }
+            catch(ExternalException) when(attempt<3) { Thread.Sleep(100); }
+        }
+        throw new InvalidOperationException("No se pudo leer el portapapeles de Windows.");
     }
 }
 
