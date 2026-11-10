@@ -203,7 +203,12 @@ internal static class PasteEngine
             string src=Path.GetFullPath(input);
             if(!File.Exists(src) && !Directory.Exists(src)) throw new IOException("El origen ya no existe: "+src);
             RequireRegular(src);
-            if(Within(src,destination)||Within(destination,src)) throw new IOException("Origen y destino solapados: "+src);
+            // A file may already live inside the target directory. In that case
+            // Windows Explorer duplicates it rather than overwriting itself.
+            // Only reject a folder when the destination is inside its source tree:
+            // recursively copying a folder into itself would never terminate.
+            if(Directory.Exists(src) && Within(src,destination))
+                throw new IOException("No se puede copiar una carpeta dentro de sí misma: "+src);
             if(File.Exists(src))
             {
                 string rel=Path.GetFileName(src);
@@ -224,8 +229,29 @@ internal static class PasteEngine
         foreach(var kv in from.OrderBy(x=>x.Key,Paths))
         {
             var file=new FileInfo(kv.Value);
-            string target=Path.GetFullPath(Path.Combine(destination,kv.Key));
-            if(!Within(destination,target)) throw new IOException("Ruta fuera de destino: "+kv.Key);
+            string relative=kv.Key;
+            string target=Path.GetFullPath(Path.Combine(destination,relative));
+            if(!Within(destination,target)) throw new IOException("Ruta fuera de destino: "+relative);
+            if(Paths.Equals(Path.GetFullPath(kv.Value),target))
+            {
+                // CUT into the exact same path does nothing. COPY creates a distinct
+                // file, even if hash/size conflict filters would normally skip it.
+                if(cut) continue;
+                if(opts.ExistingOnly || opts.DeleteOrphans)
+                    throw new IOException("Duplicar en la misma carpeta no admite Solo existentes ni Borrar huérfanos.");
+                string dir=Path.GetDirectoryName(target)!;
+                string stem=Path.GetFileNameWithoutExtension(target);
+                string ext=Path.GetExtension(target);
+                int copy=1;
+                do
+                {
+                    string suffix=copy==1?" - Copia":" - Copia ("+copy+")";
+                    target=Path.Combine(dir,stem+suffix+ext);
+                    copy++;
+                } while(File.Exists(target)||Directory.Exists(target)||
+                    result.Any(x=>Paths.Equals(x.Destination,target)));
+                relative=Path.GetRelativePath(destination,target);
+            }
             bool exists=File.Exists(target);
             if(Directory.Exists(target)) throw new IOException("Conflicto archivo/carpeta: "+target);
             if(exists) RequireRegular(target);
@@ -251,7 +277,7 @@ internal static class PasteEngine
             }
             else if(opts.ExistingOnly) {eligible=false;reason="Solo archivos existentes";}
             result.Add(new(eligible?(exists?WorkKind.Update:WorkKind.New):WorkKind.Skip,
-                kv.Key,kv.Value,target,reason,file.Length,file.LastWriteTimeUtc.Ticks,
+                relative,kv.Value,target,reason,file.Length,file.LastWriteTimeUtc.Ticks,
                 destInfo?.LastWriteTimeUtc.Ticks??0,destInfo?.Length??0,conflict,sourceHash,targetHash));
         }
         if(opts.DeleteOrphans)

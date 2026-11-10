@@ -51,6 +51,27 @@ internal static class ClipboardIntegrationSelfTest
                   PasteEngine.Blake3File(copied)==PasteEngine.Blake3File(file),
                   "Actual clipboard-driven COPY writes verified bytes");
 
+            // Regression: copying a file into its own directory must create a
+            // sibling with a new name, never overwrite the clipboard source.
+            var sameFolder=PasteEngine.Analyze(snapshot.Paths,source,false,opts);
+            Check(sameFolder.Count(WorkKind.New)==1 &&
+                  sameFolder.Items[0].Destination!=file &&
+                  sameFolder.Items[0].Destination.EndsWith("clipboard-smoke - Copia.txt",
+                      StringComparison.OrdinalIgnoreCase),
+                  "Same-directory COPY plans a separate sibling");
+            PasteQueue.Execute(sameFolder);
+            Check(File.ReadAllText(file)=="alpha - FileDrop copy" &&
+                  File.ReadAllText(Path.Combine(source,"clipboard-smoke - Copia.txt"))==
+                    "alpha - FileDrop copy",
+                  "Same-directory COPY preserves original and writes duplicate");
+            var secondCopy=PasteEngine.Analyze(snapshot.Paths,source,false,opts);
+            Check(secondCopy.Items.Single().Destination.EndsWith(
+                  "clipboard-smoke - Copia (2).txt",StringComparison.OrdinalIgnoreCase),
+                  "Repeated same-directory COPY chooses next free filename");
+            var sameFolderCut=PasteEngine.Analyze(snapshot.Paths,source,true,opts);
+            Check(sameFolderCut.Items.Count==0 && File.Exists(file),
+                  "Same-directory CUT does not delete original");
+
             File.WriteAllText(file,"beta - clipboard update");
             plan=PasteEngine.Analyze(snapshot.Paths,target,snapshot.Cut,opts);
             Check(plan.Count(WorkKind.Update)==1,
@@ -73,7 +94,7 @@ internal static class ClipboardIntegrationSelfTest
             Check(rejected,"Missing clipboard files provide a clear error");
 
             File.WriteAllText(report,string.Join(Environment.NewLine,checks)+
-                Environment.NewLine+"Total: 7 PASS, 0 FAIL"+Environment.NewLine);
+                Environment.NewLine+"Total: 11 PASS, 0 FAIL"+Environment.NewLine);
         }
         catch(Exception e)
         {
