@@ -167,6 +167,7 @@ internal sealed class TrayResident : ApplicationContext
                     _settingsReloadTimer.Start();
                 }));
             }catch(InvalidOperationException){ /* tray exiting */ }
+            catch(ObjectDisposedException){ /* tray exiting */ }
         }
         _settingsWatcher.Changed+=(_,_)=>ScheduleReload();
         _settingsWatcher.Created+=(_,_)=>ScheduleReload();
@@ -187,7 +188,7 @@ internal sealed class TrayResident : ApplicationContext
         var gui=new Native.GuiThreadInfo { cbSize=Marshal.SizeOf<Native.GuiThreadInfo>() };
         if(!Native.GetGUIThreadInfo(0,ref gui) || gui.hwndFocus==IntPtr.Zero)
             return false; // fail open for native Windows paste, never grab uncertain focus
-        if((gui.flags&0x001C)!=0) return false; // menu, popup or move/size
+        if((gui.flags&0x001E)!=0) return false; // menu, popup or move/size
         return !ExplorerPasteShortcutPolicy.IsTextEditingClass(WindowClass(gui.hwndFocus));
     }
 
@@ -198,7 +199,7 @@ internal sealed class TrayResident : ApplicationContext
             try
             {
                 var message=wParam.ToInt64();
-                if(message is WM_KEYDOWN or WM_KEYUP or WM_SYSKEYDOWN or WM_SYSKEYUP &&
+                if((message is WM_KEYDOWN or WM_KEYUP or WM_SYSKEYDOWN or WM_SYSKEYUP) &&
                     Marshal.ReadInt32(lParam)==VK_V)
                 {
                     bool down=message is WM_KEYDOWN or WM_SYSKEYDOWN;
