@@ -508,14 +508,16 @@ internal static class PasteEngine
                          .FirstOrDefault(v=>v.Present && v.Root==storage.Root))==
                          TransferHardwarePolicy.Media.Solid)) &&
                 plan.Options.SmallFilePipeline && !plan.Options.StrictSmallFileDurability &&
-                !plan.Cut && !plan.Options.DeleteOrphans && smallCopies.Length>=128 &&
+                !plan.Cut && !plan.Options.DeleteOrphans &&
+                !plan.Options.ContinueOnError && smallCopies.Length>=128 &&
                 actions.All(x=>x.Kind==WorkKind.New) &&
                 !storage.Rotational &&
                 !sourceSharesDestinationHdd;
             bool sameHddBatch=plan.Options.SameHddBatchExperimental &&
                 plan.Options.FastTransfer && plan.Options.SmallFileOptimization &&
                 !plan.Options.StrictSmallFileDurability &&
-                !plan.Cut && !plan.Options.DeleteOrphans && smallCopies.Length>=128 &&
+                !plan.Cut && !plan.Options.DeleteOrphans &&
+                !plan.Options.ContinueOnError && smallCopies.Length>=128 &&
                 actions.All(x=>x.Kind==WorkKind.New) && storage.Rotational &&
                 sourceSharesDestinationHdd &&
                 copies.Select(x=>Path.GetPathRoot(x.Source!)??x.Source!)
