@@ -13,7 +13,8 @@ internal static class SafeBenchmarkRunner
 {
     internal sealed record Measurement(string Workload,string Method,int Round,
         int Files,long Bytes,double CopySeconds,double AuditSeconds,
-        double FullSeconds,double FullMiBps,bool Blake3Verified);
+        double FullSeconds,double FullMiBps,double ComparableVerifiedSeconds,
+        bool Blake3Verified);
     const int SmallCount=256;
     const int Rounds=3;
 
@@ -73,9 +74,12 @@ internal static class SafeBenchmarkRunner
                             Path.Combine(targetRoot,"source"));
                         audit.Stop();
                         double total=copySeconds+audit.Elapsed.TotalSeconds;
+                        double verifiedComparison=method=="SolarisPKN-Paste"
+                            ?copySeconds:total; // Solaris already verifies internally
                         entries.Add(new(workload,method,round,count,bytes,
                             copySeconds,audit.Elapsed.TotalSeconds,total,
-                            bytes/1048576d/Math.Max(total,0.00001),true));
+                            bytes/1048576d/Math.Max(total,0.00001),
+                            verifiedComparison,true));
                     }
                 }
             }
@@ -85,15 +89,19 @@ internal static class SafeBenchmarkRunner
                     Rounds=g.Count(),
                     MedianFullSeconds=g.Select(x=>x.FullSeconds).OrderBy(v=>v)
                         .ElementAt(g.Count()/2),
+                    MedianComparableVerifiedSeconds=g.Select(x=>x.ComparableVerifiedSeconds)
+                        .OrderBy(v=>v).ElementAt(g.Count()/2),
                     MedianFullMiBps=g.Select(x=>x.FullMiBps).OrderBy(v=>v)
                         .ElementAt(g.Count()/2)
                 }).ToArray();
             var report=new{
                 Schema="solarispkn-safe-bench-v1",Utc=DateTime.UtcNow,
                 Sandbox=run,Methods="SolarisPKN-Paste, Windows File.Copy, Robocopy",
-                Notes="Exploratory. Includes independent BLAKE3 post-audit for all; "+
-                    "Solaris additionally verifies internally. Filesystem cache, "+
-                    "durability and CPU contention can differ. Do not rank on one run.",
+                Notes="Exploratory. All outcomes independently audited with BLAKE3. "+
+                    "ComparableVerifiedSeconds excludes the redundant extra audit for Solaris "+
+                    "because it already verified internally; it includes audit for Windows/Robocopy. "+
+                    "Filesystem cache, durability and CPU contention can differ. "+
+                    "This is NOT a certified ranking and not a substitute for 5+ cold/warm runs.",
                 Medians=medians,Measurements=entries
             };
             string json=JsonSerializer.Serialize(report,
