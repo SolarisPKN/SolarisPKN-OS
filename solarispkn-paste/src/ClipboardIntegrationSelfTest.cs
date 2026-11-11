@@ -72,6 +72,31 @@ internal static class ClipboardIntegrationSelfTest
             Check(sameFolderCut.Items.Count==0 && File.Exists(file),
                   "Same-directory CUT does not delete original");
 
+            // Same-parent directory copies must duplicate as siblings, without
+            // recursively copying the source into itself or changing its files.
+            string folder=Path.Combine(temp,"folder-case");
+            Directory.CreateDirectory(folder);
+            File.WriteAllText(Path.Combine(folder,"child.txt"),"folder-original");
+            var folderPlan=PasteEngine.Analyze(new[]{folder},temp,false,opts);
+            Check(folderPlan.Count(WorkKind.New)==1 &&
+                  folderPlan.Items[0].RelativePath.StartsWith(
+                    "folder-case - Copia"+Path.DirectorySeparatorChar,
+                    StringComparison.OrdinalIgnoreCase),
+                  "Same-parent folder COPY plans a separate folder");
+            PasteQueue.Execute(folderPlan);
+            Check(File.ReadAllText(Path.Combine(temp,"folder-case - Copia","child.txt"))==
+                    "folder-original" &&
+                  File.ReadAllText(Path.Combine(folder,"child.txt"))=="folder-original",
+                  "Same-parent folder COPY writes verified contents without touching source");
+            var repeatFolder=PasteEngine.Analyze(new[]{folder},temp,false,opts);
+            Check(repeatFolder.Items.Single().RelativePath.StartsWith(
+                  "folder-case - Copia (2)"+Path.DirectorySeparatorChar,
+                  StringComparison.OrdinalIgnoreCase),
+                  "Repeated same-parent folder COPY chooses a new sibling");
+            var cutFolder=PasteEngine.Analyze(new[]{folder},temp,true,opts);
+            Check(cutFolder.Items.Count==0 && Directory.Exists(folder),
+                  "Same-parent folder CUT is a no-op");
+
             File.WriteAllText(file,"beta - clipboard update");
             plan=PasteEngine.Analyze(snapshot.Paths,target,snapshot.Cut,opts);
             Check(plan.Count(WorkKind.Update)==1,
@@ -94,7 +119,7 @@ internal static class ClipboardIntegrationSelfTest
             Check(rejected,"Missing clipboard files provide a clear error");
 
             File.WriteAllText(report,string.Join(Environment.NewLine,checks)+
-                Environment.NewLine+"Total: 11 PASS, 0 FAIL"+Environment.NewLine);
+                Environment.NewLine+"Total: 15 PASS, 0 FAIL"+Environment.NewLine);
         }
         catch(Exception e)
         {
