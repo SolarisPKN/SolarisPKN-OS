@@ -6,7 +6,7 @@
 
 | Nº | Mejora | Estado (11/11) | Criterio antes de activarla por defecto |
 |---|---|---|---|
-| 01 | Reanudación de copia interrumpida | Pendiente | Reinicio simulado, verificación de origen y de todos los segmentos del temporal; no publicar un archivo incompleto |
+| 01 | Reanudación de copia interrumpida | **Implementación optativa experimental para archivos NUEVOS locales >=8 MiB** | Simulación de cancelación y reintento PASS; falta apagón físico, reconexión USB/SMB, validación multiusuario y QA de carreras |
 | 02 | Continuar ante errores | **Primera implementación optativa** | Un archivo bloqueado no interrumpe la copia de otro, informa operación parcial y nunca elimina originales; aún falta test USB desconectado y red |
 | 03 | AutoTune 2.0 | Perfil básico preexistente; 2.0 pendiente | A/B repetidas por tipo y tamaño de archivo; fallback conservador, sin activación sin evidencia |
 | 04 | Turbo archivos pequeños | Pipeline acotado preexistente | Medir enumeración y metadatos frente a FastCopy con 1k, 6k y 100k archivos sintéticos; cero errores BLAKE3 |
@@ -24,6 +24,7 @@
 - NO se cambió el ejecutable instalado del usuario: versión alpha.8 en una ubicación personalizada.
 - Los experimentos 01/03/05/07/08/09/10/11 no se habilitan por defecto. No confiar en clones/reflinks, snapshots o logs incompletos como evidencia de integridad.
 - Ninguna optimización puede deshabilitar silenciosamente el BLAKE3 del modo seguro.
+- **Modo 01** se habilita explícitamente en Ajustes: usa temporales privados persistentes, compara byte a byte el prefijo antes de anexar y verifica BLAKE3 completo antes de publicar; está prohibido con Cortar o Borrar huérfanos. No se activa en archivos pequeños ni sobrescrituras.
 - **Modo 02** se habilita explícitamente en Ajustes y se rechaza por código con `Cortar` o `Borrar huérfanos`; cada fallo queda en el journal y no se informa un éxito falso.
 - Pruebas de escritura exclusivamente en sandboxes de laboratorio con datos sintéticos, nunca en archivos personales ni sin una reserva de espacio conocida.
 
@@ -31,12 +32,13 @@
 - Stage 1: build y publicación autocontenida correctos, 0 advertencias; 101/101 selftests; 15/15 pruebas sintéticas del portapapeles; pruebas de registro del menú e instalador sin errores.
 - Stage 2: publicación autocontenida correcta; 101/101 selftests; 19/19 integración sintética del portapapeles; shell-registry e installer selftest EXIT 0.
 - El caso de fallo se simuló manteniendo abierto un archivo con FileShare.None; el segundo archivo se transfirió y el origen bloqueado se conservó.
-- **NO probado aún:** portapapeles real de Explorer, menú visible en sesión de usuario, instalación del nuevo EXE, archivos vacíos de carpetas duplicadas, cortes de energía, carga de miles de archivos en los nuevos modos y rendimiento comparativo nuevo. Por eso la aplicación sigue siendo alfa.
+- Stage 3: publicación autocontenida y 101/101 selftests, **26/26 integración sintética**, incluyendo cancelación tras 16 MiB, comparación de prefijo, continuación BLAKE3, rechazo de parcial alterado, bloqueo de CUT y conservación del parcial ante IOException con reintentos.
+- **NO probado aún:** portapapeles real de Explorer, menú visible en sesión de usuario, instalación del nuevo EXE, carpetas vacías duplicadas, cortes de energía/desconexión física, cargas masivas en los nuevos modos y rendimiento comparativo nuevo. Por eso la aplicación sigue siendo alfa.
 
 ## Secuencia sugerida después del arreglo base
-1. Stage 3: reanudación con journal duradero y política de errores USB/red.
+1. Stage 3: reanudación optativa con parcial persistente y verificación completa **implementada parcialmente**; journal duradero y política de errores USB/red aún pendientes.
 2. Stage 4: medición automatizada + AutoTune 2.0 + optimizaciones archivos pequeños/HDD (solo habilitar ganadores).
 3. Stage 5: compatibilidad NTFS sparse/ACL/VSS, SMB server-side, ReFS Block Clone, USN (módulos independientes).
 4. Stage 6: integración moderna Win11 COM y QA interactiva del instalador.
 
-**Estado del PR:** stage1 en #15, stage2 separado. La instalación existente continúa sin cambios hasta el test interactivo.
+**Estado del PR:** stage1 en #15, stage2 en #16, stage3 separado. La instalación existente continúa sin cambios hasta el test interactivo.

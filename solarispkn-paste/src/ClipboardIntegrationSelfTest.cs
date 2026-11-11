@@ -156,8 +156,108 @@ internal static class ClipboardIntegrationSelfTest
             Check(disallowed && File.Exists(healthy),
                 "Continue-on-error refuses CUT without altering source");
 
+            // Verified restart simulation. A cancellation preserves a private
+            // partial file; a fresh invocation checks its entire prefix.
+            string resumeRoot=Path.Combine(temp,"resume-target");
+            Directory.CreateDirectory(resumeRoot);
+            string resumeSource=Path.Combine(source,"large-resume-test.bin");
+            byte[] pseudo=new byte[1024*1024];
+            var random=new Random(20261111);
+            using(var output=new FileStream(resumeSource,FileMode.CreateNew,FileAccess.Write))
+            {
+                for(int i=0;i<24;i++)
+                {
+                    random.NextBytes(pseudo);
+                    output.Write(pseudo);
+                }
+            }
+            var sourceInfo=new FileInfo(resumeSource);
+            string resumeTarget=Path.Combine(resumeRoot,"large-resume-test.bin");
+            string partial=ResumeCopyEngine.TemporaryPath(resumeRoot,resumeSource,resumeTarget);
+            using(var stop=new CancellationTokenSource())
+            {
+                bool interrupted=false;
+                try
+                {
+                    ResumeCopyEngine.CopyVerified(resumeRoot,resumeSource,partial,
+                        sourceInfo.Length,sourceInfo.LastWriteTimeUtc.Ticks,null,
+                        stop.Token,message=>
+                        {
+                            if(message.StartsWith("Reanudable:",StringComparison.Ordinal))
+                                stop.Cancel();
+                        });
+                }
+                catch(OperationCanceledException) {interrupted=true;}
+                Check(interrupted && File.Exists(partial) &&
+                      new FileInfo(partial).Length>=16L*1024*1024 &&
+                      !File.Exists(resumeTarget),
+                    "Interrupted copy retains a private partial and never publishes it");
+            }
+            bool lockedRetryFailed=false;
+            var lockedResumeOptions=new PasteOptions { AutoHardwareProfile=false,
+                SmallFileOptimization=false,SmallFilePipeline=false,AskOnConflict=false,
+                ResumeInterrupted=true,MaxRetries=1 };
+            var lockedResumePlan=PasteEngine.Analyze(new[]{resumeSource},
+                resumeRoot,false,lockedResumeOptions);
+            using(var lockedInput=new FileStream(resumeSource,FileMode.Open,
+                FileAccess.ReadWrite,FileShare.None))
+            {
+                try { PasteQueue.Execute(lockedResumePlan); }
+                catch(IOException) {lockedRetryFailed=true;}
+            }
+            Check(lockedRetryFailed && File.Exists(partial) &&
+                  new FileInfo(partial).Length>=16L*1024*1024,
+                "Retryable locked-source failure preserves resume partial");
+
+            long resumedBytes=-1;
+            ResumeCopyEngine.CopyVerified(resumeRoot,resumeSource,partial,
+                sourceInfo.Length,sourceInfo.LastWriteTimeUtc.Ticks,null,
+                CancellationToken.None,resumedFrom:n=>resumedBytes=n);
+            Check(resumedBytes>=16L*1024*1024,
+                "Restart reads and validates previously copied bytes");
+            File.Move(partial,resumeTarget,false);
+            Check(PasteEngine.Blake3File(resumeSource)==
+                  PasteEngine.Blake3File(resumeTarget),
+                "Resumed destination equals the full source BLAKE3");
+            string badTarget=Path.Combine(resumeRoot,"invalid-partial.bin");
+            string badPartial=ResumeCopyEngine.TemporaryPath(resumeRoot,resumeSource,badTarget);
+            Directory.CreateDirectory(Path.GetDirectoryName(badPartial)!);
+            File.WriteAllText(badPartial,"not-from-source");
+            bool invalidRejected=false;
+            try
+            {
+                ResumeCopyEngine.CopyVerified(resumeRoot,resumeSource,badPartial,
+                    sourceInfo.Length,sourceInfo.LastWriteTimeUtc.Ticks,null,
+                    CancellationToken.None);
+            }
+            catch(IOException) {invalidRejected=true;}
+            Check(invalidRejected && !File.Exists(badTarget) &&
+                  File.ReadAllText(badPartial)=="not-from-source",
+                "Mismatched partial is rejected without deleting user data");
+            var resumeOptions=new PasteOptions { AutoHardwareProfile=false,
+                SmallFileOptimization=false,SmallFilePipeline=false,AskOnConflict=false,
+                ResumeInterrupted=true,MaxRetries=0 };
+            string integratedRoot=Path.Combine(temp,"integrated-resume");
+            Directory.CreateDirectory(integratedRoot);
+            var resumePlan=PasteEngine.Analyze(new[]{resumeSource},
+                integratedRoot,false,resumeOptions);
+            PasteQueue.Execute(resumePlan);
+            Check(PasteEngine.Blake3File(resumeSource)==
+                  PasteEngine.Blake3File(Path.Combine(integratedRoot,"large-resume-test.bin")),
+                "PasteQueue integrates resumable engine and verifies full bytes");
+            bool refusedCutResume=false;
+            try
+            {
+                var unsafeResume=PasteEngine.Analyze(new[]{resumeSource},
+                    integratedRoot,true,resumeOptions);
+                PasteQueue.Execute(unsafeResume);
+            }
+            catch(InvalidOperationException) {refusedCutResume=true;}
+            Check(refusedCutResume && File.Exists(resumeSource),
+                "Resume option refuses CUT and preserves source");
+
             File.WriteAllText(report,string.Join(Environment.NewLine,checks)+
-                Environment.NewLine+"Total: 19 PASS, 0 FAIL"+Environment.NewLine);
+                Environment.NewLine+"Total: 26 PASS, 0 FAIL"+Environment.NewLine);
         }
         catch(Exception e)
         {

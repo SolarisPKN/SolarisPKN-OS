@@ -20,6 +20,8 @@ internal sealed class PasteOptions
     // Opt-in: keep copying independent files after a recoverable I/O error.
     // Forbidden for CUT and orphan deletion. No source is removed on failure.
     public bool ContinueOnError { get; set; } = false;
+    // Experimental: keep verified partial data from an interrupted NEW-file copy.
+    public bool ResumeInterrupted { get; set; } = false;
     public bool FastTransfer { get; set; } = true;
     // Pure presentation switch. Both modes use identical verified transfer logic.
     // UI: Visual 250 ms / Ultra 5000 ms; core I/O is identical in both.
@@ -348,6 +350,8 @@ internal static class PasteEngine
     {
         if(plan.Options.ContinueOnError && (plan.Cut || plan.Options.DeleteOrphans))
             throw new InvalidOperationException("Continuar ante errores no se permite con Cortar ni Borrar huérfanos.");
+        if(plan.Options.ResumeInterrupted && (plan.Cut || plan.Options.DeleteOrphans))
+            throw new InvalidOperationException("Reanudar copias no se permite con Cortar ni Borrar huérfanos.");
         var actions=plan.Items.Where(x=>x.Kind!=WorkKind.Skip).ToList();
         // No realizar modificación alguna si el escenario cambió.
         foreach(var x in actions) { cancel.ThrowIfCancellationRequested(); Recheck(x); }
@@ -581,7 +585,13 @@ internal static class PasteEngine
                 }
                 // All writes go into a unique temporary file. The real destination is
                 // replaced only after hashing the source while streaming and verifying temp.
-                string tmp=x.Destination+".spaste-"+Guid.NewGuid().ToString("N")+".tmp";
+                bool resumeCopy=plan.Options.ResumeInterrupted && x.Kind==WorkKind.New &&
+                    x.Size>=8L*1024*1024 &&
+                    !x.Source!.StartsWith(@"\\",StringComparison.Ordinal) &&
+                    !x.Destination.StartsWith(@"\\",StringComparison.Ordinal);
+                string tmp=resumeCopy
+                    ? ResumeCopyEngine.TemporaryPath(plan.Destination,x.Source!,x.Destination)
+                    : x.Destination+".spaste-"+Guid.NewGuid().ToString("N")+".tmp";
                 try {
                     string sourceRoot=Path.GetPathRoot(x.Source!)??x.Source!;
                     if(!readAheadCache.TryGetValue(sourceRoot,out bool useReadAhead))
@@ -596,7 +606,12 @@ internal static class PasteEngine
                         cancel.ThrowIfCancellationRequested();
                         try
                         {
-                            if(plan.Options.FastTransfer)
+                            if(resumeCopy)
+                            {
+                                ResumeCopyEngine.CopyVerified(plan.Destination,x.Source!,tmp,
+                                    x.Size,x.SourceTicks,x.SourceHash,cancel,progress);
+                            }
+                            else if(plan.Options.FastTransfer)
                             {
                                 // Conservative opt-in: both devices must explicitly report
                                 // no seek penalty; unknown bus/mapping cannot be assumed SSD.
@@ -690,7 +705,9 @@ internal static class PasteEngine
                         }
                         catch(IOException e) when(attempt<Math.Clamp(plan.Options.MaxRetries,0,3))
                         {
-                            if(File.Exists(tmp))File.Delete(tmp);
+                            // Never discard a resumable partial after an I/O error.
+                            // Its verified prefix is checked again before any append.
+                            if(!resumeCopy && File.Exists(tmp))File.Delete(tmp);
                             progress?.Invoke($"Error transitorio en {x.RelativePath}: reintento {attempt+1} ({e.Message})");
                             Thread.Sleep(250*(attempt+1));
                         }
@@ -698,9 +715,9 @@ internal static class PasteEngine
                     cancel.ThrowIfCancellationRequested();
                     Recheck(x); // preserve preview semantics if another process touched the destination
                     File.SetLastWriteTimeUtc(tmp,new DateTime(x.SourceTicks,DateTimeKind.Utc));
-                    File.Move(tmp,x.Destination,true);
+                    File.Move(tmp,x.Destination,overwrite:!resumeCopy);
                 }
-                finally{if(File.Exists(tmp))File.Delete(tmp);}
+                finally{if(!resumeCopy && File.Exists(tmp))File.Delete(tmp);}
                 writes++;
                 Record("WRITE",x);
                 metrics?.Completed(x);
