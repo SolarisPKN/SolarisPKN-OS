@@ -91,6 +91,7 @@ internal static class Program
                         throw new IOException("No valid CPU/RAM inventory");
                     break;
                 case "--bench": BenchmarkRunner.MainCli(args); break;
+                case "--bench-safe": SafeBenchmarkRunner.Run(args); break;
                 case "--paste":
                     if (args.Length<2) throw new ArgumentException("Falta directorio de destino.");
                     Application.Run(new PasteWindow(args[1]));
@@ -112,6 +113,15 @@ internal static class Program
                 Environment.ExitCode=2;
                 string target=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     "SolarisPKN","Paste","selftest-fatal.txt");
+                Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                File.WriteAllText(target,ex.ToString());
+            }
+            else if(args.Length>0 && args[0].Equals("--bench-safe",StringComparison.OrdinalIgnoreCase))
+            {
+                Environment.ExitCode=4;
+                string target=Path.Combine(Environment.GetFolderPath(
+                    Environment.SpecialFolder.LocalApplicationData),
+                    "SolarisPKN","Paste","bench-safe-fatal.txt");
                 Directory.CreateDirectory(Path.GetDirectoryName(target)!);
                 File.WriteAllText(target,ex.ToString());
             }

@@ -18,7 +18,7 @@
 | 10 | Block Clone / Reflink | Pendiente | Gate por FSCTL/volumen compatible, Copy-on-Write verificado; no asumir soporte NTFS |
 | 11 | USN Journal | Pendiente | Identificador del journal, recuperación por discontinuidad y full scan cuando falte historial |
 | 12 | Windows 11 Shell moderno | Menú clásico preexistente; COM moderno pendiente | Instalación reversible, sin bloquear Explorer, prueba de clipboard en sesión de usuario |
-| 13 | Benchmark competitivo | Harness interno preexistente; suite competitiva pendiente | FastCopy/TeraCopy/Robocopy/Explorer medidos con semántica y verificación equivalentes, datos sintéticos aislados, mínimo cinco rondas y JSON auditable |
+| 13 | Benchmark competitivo | **Runner acotado implementado**: Solaris vs File.Copy y Robocopy, 3 rondas y auditoría BLAKE3 | Falta FastCopy/TeraCopy, caché fría, repetición 5+ rondas y comparación de durabilidad homogénea |
 
 ## Regla de seguridad del motor
 - NO se cambió el ejecutable instalado del usuario: versión alpha.8 en una ubicación personalizada.
@@ -33,6 +33,13 @@
 - Stage 2: publicación autocontenida correcta; 101/101 selftests; 19/19 integración sintética del portapapeles; shell-registry e installer selftest EXIT 0.
 - El caso de fallo se simuló manteniendo abierto un archivo con FileShare.None; el segundo archivo se transfirió y el origen bloqueado se conservó.
 - Stage 3: publicación autocontenida y 101/101 selftests, **26/26 integración sintética**, incluyendo cancelación tras 16 MiB, comparación de prefijo, continuación BLAKE3, rechazo de parcial alterado, bloqueo de CUT y conservación del parcial ante IOException con reintentos.
+- Stage 4: suite opcional `--bench-safe <carpeta existente de laboratorio>`. Crea solo un subdirectorio nuevo con sentinel y no elimina datos preexistentes. Genera carga sintética (256 archivos pequeños y 32 MiB grande), compara Solaris, File.Copy y Robocopy durante 3 rondas, audita todos los archivos con BLAKE3 y guarda JSON.
+- Evidencia real Stage 4 (Windows 11, volumen D:, corrida 2026-11-11): `D:\\researchs\\SolarisPKN-Paste\\benchmarks\\paste-safe-bench-20261111-111137-ac0be681\\results.json`.
+  - Mediana de tiempo con verificación comparable *estimada*, 256 archivos pequeños: Solaris **1,544 s**, File.Copy **1,509 s**, Robocopy **1,462 s**.
+  - Un archivo de 32 MiB: Solaris **0,419 s**, File.Copy **0,083 s**, Robocopy **0,122 s**.
+  - **Advertencia metodológica:** Solaris hace verificación interna y sincronización de datos diferente de las otras herramientas; el campo `ComparableVerifiedSeconds` excluye la segunda auditoría de Solaris. No afirma durabilidad o caché idéntica. Estas cifras son exploratorias, no constituyen un ranking válido ni una mejora demostrada.
+  - FastCopy no estaba disponible en las rutas de instalación inspeccionadas. Se encontró un ejecutable de TeraCopy guardado en el laboratorio, pero no fue ejecutado bajo privilegios SYSTEM.
+
 - **NO probado aún:** portapapeles real de Explorer, menú visible en sesión de usuario, instalación del nuevo EXE, carpetas vacías duplicadas, cortes de energía/desconexión física, cargas masivas en los nuevos modos y rendimiento comparativo nuevo. Por eso la aplicación sigue siendo alfa.
 
 ## Secuencia sugerida después del arreglo base
@@ -41,4 +48,4 @@
 3. Stage 5: compatibilidad NTFS sparse/ACL/VSS, SMB server-side, ReFS Block Clone, USN (módulos independientes).
 4. Stage 6: integración moderna Win11 COM y QA interactiva del instalador.
 
-**Estado del PR:** stage1 en #15, stage2 en #16, stage3 separado. La instalación existente continúa sin cambios hasta el test interactivo.
+**Estado del PR:** stage1 en #15, stage2 en #16, stage3 en #17, stage4 separado. La instalación existente continúa sin cambios hasta el test interactivo.
