@@ -46,7 +46,15 @@ internal static class Program
                 case "--settings": Application.Run(new SettingsWindow()); break;
                 case "--updates": Application.Run(new UpdatesWindow(PasteUpdates.Product)); break;
                 case "--updates-selftest": PasteUpdates.SelfTest(); break;
-                case "--tray": Application.Run(new TrayResident()); break;
+                case "--tray":
+                    // A second resident would install a second keyboard hook.
+                    // One resident per interactive Windows session is mandatory.
+                    using(var residentMutex=new Mutex(true,
+                        @"Local\SolarisPKN-Paste-Tray-1",out bool owner))
+                    {
+                        if(owner)Application.Run(new TrayResident());
+                    }
+                    break;
                 case "--selftest": SelfTest.Run(); break;
                 case "--selftest-headless": SelfTest.Run(false); break;
                 case "--usb-advisor-test":
@@ -442,6 +450,7 @@ internal sealed class SettingsWindow : Form
     readonly CheckBox _ask=new(){Text="Preguntar si hay conflictos (BLAKE3 distinto)",AutoSize=true};
     readonly CheckBox _continueErrors=new(){Text="Continuar ante errores (solo COPIAR, sin borrar huérfanos)",AutoSize=true};
     readonly CheckBox _resume=new(){Text="Reanudar archivos nuevos grandes (experimental, desde 8 MiB)",AutoSize=true};
+    readonly CheckBox _ctrlv=new(){Text="Usar SolarisPKN-Paste con Ctrl+V en carpetas del Explorador",AutoSize=true};
     readonly CheckBox _antifrag=new(){Text="Antifrag: cola por dispositivo físico (si se detecta)",AutoSize=true};
     readonly CheckBox _fast=new(){Text="Motor rápido: E/S asíncrona y BLAKE3 durante copia",AutoSize=true};
     readonly CheckBox _adaptiveSsd=new(){Text="SSD adaptativo experimental (archivos nuevos >=1 GiB, SSD a SSD)",AutoSize=true};
@@ -473,6 +482,7 @@ internal sealed class SettingsWindow : Form
         _ask.Checked=_options.AskOnConflict;_antifrag.Checked=_options.AntiFrag;_noConfirm.Checked=_options.NoConfirm;
         _continueErrors.Checked=_options.ContinueOnError;
         _resume.Checked=_options.ResumeInterrupted;
+        _ctrlv.Checked=_options.ReplaceExplorerCtrlV;
         _fast.Checked=_options.FastTransfer;_preallocate.Checked=_options.Preallocate;
         _adaptiveSsd.Checked=_options.AdaptiveVerifiedSolidStateCopy;
         _adaptiveNvmeLarge.Checked=_options.AdaptiveNvmeSameDiskOverlapped;
@@ -523,7 +533,8 @@ internal sealed class SettingsWindow : Form
             (_buffer,"Ajusta la memoria de transferencia usada por operación."),
             (_writers,"Cantidad de escritores concurrentes en SSD/NVMe; cero deja que el motor elija."),
             (_progressMode,"Visual actualiza el gráfico frecuentemente; Ultra minimiza el costo de actualización."),
-            (_hotkey,"Configurá la combinación para lanzar Paste desde teclado o botón lateral del mouse.")
+            (_hotkey,"Configurá la combinación para lanzar Paste desde teclado o botón lateral del mouse."),
+            (_ctrlv,"Opción explícita: intercepta Ctrl+V solo sobre carpetas reales de Explorer cuando el portapapeles contiene archivos. No modifica el atajo del sistema, ni afecta a navegadores o editores. Requiere el residente activo.")
         })
             _optionHelp.SetToolTip(control,help);
 
@@ -613,16 +624,43 @@ internal sealed class SettingsWindow : Form
         };
         panel.Controls.Add(only);
         _optionHelp.SetToolTip(only,ShellMenu.HelpFor("07-simple"));
-        panel.Controls.Add(new Label(){Text="Atajo global (si se inicia el residente de bandeja):",AutoSize=true,Margin=new Padding(7,12,0,3)});
+        panel.Controls.Add(new Label(){Text="ATAJOS DE TECLADO · Residente de bandeja",AutoSize=true,
+            Margin=new Padding(7,12,0,3),Font=new Font("Segoe UI",9,FontStyle.Bold)});
+        panel.Controls.Add(_ctrlv);
+        panel.Controls.Add(new Label(){Text="Ctrl+V normal en textos y otras aplicaciones. Desactivar restaura Explorer y limpia el atajo de Solaris.",
+            AutoSize=true,Margin=new Padding(7,0,0,6)});
         panel.Controls.Add(_hotkey);
-        _hotkey.Click+=(s,e)=>{_hotkey.Text="Presioná combinación o botón lateral del mouse. ESC cancela.";_hotkey.Focus();};
+        _ctrlv.CheckedChanged+=(_,_)=>{
+            // Both transitions intentionally clear the old custom shortcut.
+            // With the mode off, Solaris remains unassigned until chosen again.
+            _options.Hotkey="";
+            _hotkey.Enabled=!_ctrlv.Checked;
+            _hotkey.Text=_ctrlv.Checked?"Atajo: Ctrl+V (solo Explorador)":"Atajo: Sin asignar";
+        };
+        _hotkey.Enabled=!_ctrlv.Checked;
+        _hotkey.Text=_ctrlv.Checked?"Atajo: Ctrl+V (solo Explorador)":
+            string.IsNullOrEmpty(_options.Hotkey)?"Atajo: Sin asignar":"Atajo: "+_options.Hotkey;
+        _hotkey.Click+=(s,e)=>{if(_ctrlv.Checked)return;
+            _hotkey.Text="Presioná combinación o botón lateral del mouse. ESC cancela.";_hotkey.Focus();};
         _hotkey.KeyDown+=(s,e)=>{
-            if(e.KeyCode==Keys.Escape){_hotkey.Text="Atajo: "+_options.Hotkey;e.SuppressKeyPress=true;return;}
+            if(_ctrlv.Checked)return;
+            if(e.KeyCode==Keys.Escape){_hotkey.Text=string.IsNullOrEmpty(_options.Hotkey)?
+                "Atajo: Sin asignar":"Atajo: "+_options.Hotkey;e.SuppressKeyPress=true;return;}
+            if(e.Control && !e.Alt && !e.Shift && e.KeyCode==Keys.V)
+            {
+                _hotkey.Text="Atajo: Sin asignar";
+                _options.Hotkey="";
+                e.SuppressKeyPress=true;
+                MessageBox.Show(this,"Para utilizar Ctrl+V activá la casilla de reemplazo del Explorador. "+
+                    "Nunca registramos Ctrl+V globalmente.","Atajo reservado");
+                return;
+            }
             if(e.KeyCode is Keys.ControlKey or Keys.Menu or Keys.ShiftKey or Keys.LWin or Keys.RWin)return;
             string mods=(e.Control?"Ctrl+":"")+(e.Alt?"Alt+":"")+(e.Shift?"Shift+":"");
             _options.Hotkey=mods+e.KeyCode;_hotkey.Text="Atajo: "+_options.Hotkey;e.SuppressKeyPress=true;
         };
         _hotkey.MouseDown+=(s,e)=>{
+            if(_ctrlv.Checked)return;
             if(e.Button==MouseButtons.XButton1||e.Button==MouseButtons.XButton2)
             { _options.Hotkey=e.Button==MouseButtons.XButton1?"MouseX1":"MouseX2";_hotkey.Text="Atajo: "+_options.Hotkey;}
         };
@@ -635,6 +673,7 @@ internal sealed class SettingsWindow : Form
             _options.AskOnConflict=_ask.Checked;_options.AntiFrag=_antifrag.Checked;_options.NoConfirm=_noConfirm.Checked;
             _options.ContinueOnError=_continueErrors.Checked;
             _options.ResumeInterrupted=_resume.Checked;
+            _options.ReplaceExplorerCtrlV=_ctrlv.Checked;
             _options.FastTransfer=_fast.Checked;_options.Preallocate=_preallocate.Checked;
             _options.AdaptiveVerifiedSolidStateCopy=_adaptiveSsd.Checked;
             _options.AdaptiveNvmeSameDiskOverlapped=_adaptiveNvmeLarge.Checked;
@@ -648,6 +687,24 @@ internal sealed class SettingsWindow : Form
             _options.ProgressMode=_progressMode.SelectedIndex==1?"Ultra":"Visual";
             try{
                 _options.Save();Installer.UpdateMenus();
+                // Enable immediately in this logon session without installing
+                // anything or changing HKCU Run. Existing resident reloads
+                // via FileSystemWatcher; new resident is singleton guarded.
+                if(_options.ReplaceExplorerCtrlV)
+                {
+                    try
+                    {
+                        var run=new ProcessStartInfo(Environment.ProcessPath!){UseShellExecute=true};
+                        run.ArgumentList.Add("--tray");
+                        Process.Start(run);
+                    }
+                    catch(Exception error)
+                    {
+                        MessageBox.Show(this,"La opción se guardó pero Windows no permitió iniciar el residente: "+
+                            error.Message+"\nCtrl+V normal sigue funcionando hasta activar el residente.",
+                            "Residente no iniciado",MessageBoxButtons.OK,MessageBoxIcon.Warning);
+                    }
+                }
                 var preferences=UsbAdvisorPreferences.Load();
                 if(preferences.NeverAskAll==_usbAlerts.Checked ||
                     preferences.ShowNewDevices!=_usbFirstTime.Checked)

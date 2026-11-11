@@ -256,8 +256,37 @@ internal static class ClipboardIntegrationSelfTest
             Check(refusedCutResume && File.Exists(resumeSource),
                 "Resume option refuses CUT and preserves source");
 
+            // Ctrl+V interception is never a global Windows shortcut.
+            // Exercise policy only: these tests never install a keyboard hook
+            // and never read the user's actual clipboard.
+            bool Should(bool enabled=true,bool explorer=true,bool files=true,
+                bool editing=false,bool ctrl=true,bool alt=false,
+                bool shift=false,bool win=false,bool injected=false) =>
+                ExplorerPasteShortcutPolicy.ShouldIntercept(enabled,explorer,
+                    files,editing,ctrl,alt,shift,win,injected);
+            Check(Should(),"Explorer Ctrl+V opt-in routes physical files to Solaris");
+            Check(!Should(enabled:false),"Disabled mode leaves Ctrl+V native");
+            Check(!Should(explorer:false),"Non-Explorer apps retain native Ctrl+V");
+            Check(!Should(files:false),"Text-only clipboard retains native Ctrl+V");
+            Check(!Should(editing:true),"Explorer rename/search edit retains native Ctrl+V");
+            Check(!Should(ctrl:false) && !Should(alt:true) &&
+                  !Should(shift:true) && !Should(win:true),
+                "Only plain Ctrl+V is intercepted");
+            Check(!Should(injected:true),"Injected keystrokes always pass through");
+            Check(ExplorerPasteShortcutPolicy.IsExplorerFolderClass("CabinetWClass") &&
+                  !ExplorerPasteShortcutPolicy.IsExplorerFolderClass("Progman"),
+                "Explorer file windows distinct from the Windows desktop");
+            Check(ExplorerPasteShortcutPolicy.IsTextEditingClass("Edit") &&
+                  ExplorerPasteShortcutPolicy.IsTextEditingClass("RichEdit50W") &&
+                  !ExplorerPasteShortcutPolicy.IsTextEditingClass("DirectUIHWND"),
+                "Explorer editable controls are excluded");
+            Check(ExplorerPasteShortcutPolicy.IsReservedCtrlV("ctrl+v") &&
+                  !ExplorerPasteShortcutPolicy.IsReservedCtrlV("Ctrl+Alt+P") &&
+                  !new PasteOptions().ReplaceExplorerCtrlV,
+                "Ctrl+V override opt-in and never globally registered by default");
+
             File.WriteAllText(report,string.Join(Environment.NewLine,checks)+
-                Environment.NewLine+"Total: 26 PASS, 0 FAIL"+Environment.NewLine);
+                Environment.NewLine+"Total: 36 PASS, 0 FAIL"+Environment.NewLine);
         }
         catch(Exception e)
         {
