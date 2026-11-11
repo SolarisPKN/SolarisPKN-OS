@@ -217,6 +217,25 @@ internal static class PasteEngine
             else
             {
                 string name=Path.GetFileName(src.TrimEnd('\\'));
+                string proposedRoot=Path.GetFullPath(Path.Combine(destination,name));
+                if(Paths.Equals(proposedRoot,src))
+                {
+                    // Explorer-style same-parent folder duplication. A fresh
+                    // sibling name must be chosen before enumerating children.
+                    // Otherwise copying would overwrite each source file itself.
+                    if(cut) continue; // moving a folder onto itself is a no-op
+                    if(opts.ExistingOnly || opts.DeleteOrphans)
+                        throw new IOException("Duplicar una carpeta aquí no admite Solo existentes ni Borrar huérfanos.");
+                    string stem=name;
+                    int n=1;
+                    do
+                    {
+                        name=stem+(n==1?" - Copia":" - Copia ("+n+")");
+                        proposedRoot=Path.Combine(destination,name);
+                        n++;
+                    } while(Directory.Exists(proposedRoot) || File.Exists(proposedRoot) ||
+                        dirs.Contains(name,StringComparer.OrdinalIgnoreCase));
+                }
                 dirs.Add(name);
                 foreach(string f in Directory.EnumerateFiles(src,"*",Walk))
                 {
