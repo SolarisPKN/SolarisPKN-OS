@@ -89,6 +89,9 @@ internal sealed class PasteOptions
     public bool Preallocate { get; set; } = true;
     public int MaxRetries { get; set; } = 2;
     public void SetOnlyPaste() { DeleteOrphans=false; NewerOnly=false; OlderOnly=false; HashDifferent=false; SizeDifferent=false; ExistingOnly=false; }
+    // Explicit opt-in. Does not change Windows, registry or other apps:
+    // the user's resident intercepts Ctrl+V only in File Explorer file views.
+    public bool ReplaceExplorerCtrlV { get; set; } = false;
     public string Hotkey { get; set; } = "Ctrl+Alt+P";
     public static string PathToSettings => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"SolarisPKN","Paste","settings.json");
     public static PasteOptions Load()
@@ -118,6 +121,11 @@ internal sealed class PasteOptions
         SplitVerifierWorkers=Math.Clamp(SplitVerifierWorkers,1,8);
         SmallFileSourceReaders=Math.Clamp(SmallFileSourceReaders,1,4);
         if(ProgressMode is not ("Visual" or "Ultra"))ProgressMode="Visual";
+        // Ctrl+V must never be registered globally. When the mode is
+        // disabled the default Windows shortcut is untouched, and Solaris
+        // has no shortcut until the user picks a new one.
+        if(ReplaceExplorerCtrlV || ExplorerPasteShortcutPolicy.IsReservedCtrlV(Hotkey))
+            Hotkey="";
         Directory.CreateDirectory(Path.GetDirectoryName(PathToSettings)!);
         File.WriteAllText(PathToSettings, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
     }
