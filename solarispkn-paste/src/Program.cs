@@ -34,6 +34,11 @@ internal static class Program
                 case "--installer-selftest": WindowsSetup.InstallerSelfTest(); break;
                 case "--shell-registry-test": ShellMenu.RegistrySelfTest(); break;
                 case "--clipboard-integration-test": ClipboardIntegrationSelfTest.Run(); break;
+                case "--clipboard-probe":
+                    MessageBox.Show(ClipboardInput.Diagnose(),
+                        "SolarisPKN-Paste · diagnóstico del portapapeles",
+                        MessageBoxButtons.OK,MessageBoxIcon.Information);
+                    break;
                 case "--capabilities-test": WindowsCapabilities.SelfTest(); break;
                 case "--toggle": if(args.Length<2)throw new ArgumentException("Falta opción");Installer.Toggle(args[1]);break;
                 case "--only-paste": Installer.OnlyPaste();break;
@@ -161,14 +166,49 @@ internal static class ClipboardInput
         return (source,cut);
     }
 
+    // Interactive, read-only probe: NEVER displays or records clipboard paths,
+    // filenames or file content. Run in the user's logged-on Windows session.
+    internal static string Diagnose()
+    {
+        try
+        {
+            IDataObject? data=Clipboard.GetDataObject();
+            if(data is null)
+                return "El portapapeles está vacío o Windows no permite leerlo en esta sesión.";
+            string[] formats=data.GetFormats(false);
+            bool files=data.GetDataPresent(DataFormats.FileDrop);
+            string categories=string.Join(", ",formats.Where(x=>
+                x is DataFormats.FileDrop or DataFormats.Text or DataFormats.UnicodeText ||
+                x.Contains("Shell IDList",StringComparison.OrdinalIgnoreCase) ||
+                x.Contains("FileGroupDescriptor",StringComparison.OrdinalIgnoreCase)).Take(10));
+            if(!files)
+                return "FileDrop: NO. Formatos reconocidos: "+categories+"\\n"+
+                    "SolarisPKN-Paste solo pega archivos y carpetas físicos copiados en el Explorador. "+
+                    "El texto, los archivos virtuales y los adjuntos que no exponen rutas FileDrop "+
+                    "todavía no son compatibles.";
+            var snapshot=FromDataObject(data);
+            return "FileDrop: SÍ. Elementos: "+snapshot.Paths.Count+
+                ". Operación solicitada: "+(snapshot.Cut?"CORTAR":"COPIAR")+
+                ". Formatos reconocidos: "+categories+"\\n"+
+                "El portapapeles se pudo interpretar. Si aún no pega, revisá "+
+                "el destino, los filtros de Pegado y la versión instalada.";
+        }
+        catch(Exception ex)
+        {
+            return "El portapapeles no pudo analizarse ("+
+                ex.GetType().Name+"). No se modificó ningún archivo. "+
+                "Reintentá con Ctrl+C sobre un archivo local del Explorador.";
+        }
+    }
+
     public static (List<string> Paths,bool Cut) Snapshot()
     {
         // Explorer, OneDrive and other shell providers may hold the Windows
         // clipboard momentarily. Retry ONLY genuine COM clipboard contention.
-        for(int attempt=0;attempt<4;attempt++)
+        for(int attempt=0;attempt<8;attempt++)
         {
             try { return FromDataObject(Clipboard.GetDataObject()); }
-            catch(ExternalException) when(attempt<3) { Thread.Sleep(100); }
+            catch(ExternalException) when(attempt<7) { Thread.Sleep(120); }
         }
         throw new InvalidOperationException("No se pudo leer el portapapeles de Windows.");
     }
