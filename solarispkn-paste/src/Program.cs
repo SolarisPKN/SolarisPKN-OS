@@ -178,18 +178,18 @@ internal static class ClipboardInput
             string[] formats=data.GetFormats(false);
             bool files=data.GetDataPresent(DataFormats.FileDrop);
             string categories=string.Join(", ",formats.Where(x=>
-                x is DataFormats.FileDrop or DataFormats.Text or DataFormats.UnicodeText ||
+                x==DataFormats.FileDrop || x==DataFormats.Text || x==DataFormats.UnicodeText ||
                 x.Contains("Shell IDList",StringComparison.OrdinalIgnoreCase) ||
                 x.Contains("FileGroupDescriptor",StringComparison.OrdinalIgnoreCase)).Take(10));
             if(!files)
-                return "FileDrop: NO. Formatos reconocidos: "+categories+"\\n"+
+                return "FileDrop: NO. Formatos reconocidos: "+categories+"\n"+
                     "SolarisPKN-Paste solo pega archivos y carpetas físicos copiados en el Explorador. "+
                     "El texto, los archivos virtuales y los adjuntos que no exponen rutas FileDrop "+
                     "todavía no son compatibles.";
             var snapshot=FromDataObject(data);
             return "FileDrop: SÍ. Elementos: "+snapshot.Paths.Count+
                 ". Operación solicitada: "+(snapshot.Cut?"CORTAR":"COPIAR")+
-                ". Formatos reconocidos: "+categories+"\\n"+
+                ". Formatos reconocidos: "+categories+"\n"+
                 "El portapapeles se pudo interpretar. Si aún no pega, revisá "+
                 "el destino, los filtros de Pegado y la versión instalada.";
         }
