@@ -291,7 +291,8 @@ internal sealed class PasteWindow : Form
                 $"Omitidos {_plan.Count(WorkKind.Skip)} · {_plan.BytesToWrite:N0} bytes";
             _apply.Enabled=_plan.Items.Any(x=>x.Kind!=WorkKind.Skip);
             // Sin confirmación no permite modificaciones destructivas ni conflictos sin resolver.
-            if(opts.NoConfirm && !(opts.ContinueOnError && (clip.Cut || opts.DeleteOrphans)) &&
+            if(opts.NoConfirm && !((opts.ContinueOnError || opts.ResumeInterrupted) &&
+                (clip.Cut || opts.DeleteOrphans)) &&
                 _plan.Count(WorkKind.DeleteOrphan)==0 && !clip.Cut &&
                 !_plan.Items.Any(x=>x.Kind==WorkKind.Update && x.IsConflict && opts.AskOnConflict) && _apply.Enabled)
                 await ExecuteAsync();
@@ -430,6 +431,7 @@ internal sealed class SettingsWindow : Form
     readonly CheckBox _existing=new(){Text="Solo archivos existentes",AutoSize=true};
     readonly CheckBox _ask=new(){Text="Preguntar si hay conflictos (BLAKE3 distinto)",AutoSize=true};
     readonly CheckBox _continueErrors=new(){Text="Continuar ante errores (solo COPIAR, sin borrar huérfanos)",AutoSize=true};
+    readonly CheckBox _resume=new(){Text="Reanudar archivos nuevos grandes (experimental, desde 8 MiB)",AutoSize=true};
     readonly CheckBox _antifrag=new(){Text="Antifrag: cola por dispositivo físico (si se detecta)",AutoSize=true};
     readonly CheckBox _fast=new(){Text="Motor rápido: E/S asíncrona y BLAKE3 durante copia",AutoSize=true};
     readonly CheckBox _adaptiveSsd=new(){Text="SSD adaptativo experimental (archivos nuevos >=1 GiB, SSD a SSD)",AutoSize=true};
@@ -460,6 +462,7 @@ internal sealed class SettingsWindow : Form
         _hash.Checked=_options.HashDifferent;_size.Checked=_options.SizeDifferent;_existing.Checked=_options.ExistingOnly;
         _ask.Checked=_options.AskOnConflict;_antifrag.Checked=_options.AntiFrag;_noConfirm.Checked=_options.NoConfirm;
         _continueErrors.Checked=_options.ContinueOnError;
+        _resume.Checked=_options.ResumeInterrupted;
         _fast.Checked=_options.FastTransfer;_preallocate.Checked=_options.Preallocate;
         _adaptiveSsd.Checked=_options.AdaptiveVerifiedSolidStateCopy;
         _adaptiveNvmeLarge.Checked=_options.AdaptiveNvmeSameDiskOverlapped;
@@ -490,6 +493,7 @@ internal sealed class SettingsWindow : Form
             (_existing,ShellMenu.HelpFor("06-existing")),
             (_ask,ShellMenu.HelpFor("08-ask")),
             (_continueErrors,"Sigue con otros archivos cuando uno falla por lectura, permisos o E/S. No se puede combinar con Cortar ni Borrar huérfanos; los archivos fallidos quedan documentados."),
+            (_resume,"Experimental: conserva un temporal privado para copias nuevas de al menos 8 MiB. Verifica todos los bytes existentes antes de continuar; nunca con Cortar ni Borrar huérfanos."),
             (_antifrag,ShellMenu.HelpFor("09-antifrag")),
             (_noConfirm,ShellMenu.HelpFor("99-noconfirm")),
             (_fast,"Activa el motor rápido de transferencia asíncrona cuando es apropiado para el dispositivo."),
@@ -516,7 +520,7 @@ internal sealed class SettingsWindow : Form
         var panel=new FlowLayoutPanel(){Dock=DockStyle.Fill,FlowDirection=FlowDirection.TopDown,
             WrapContents=false,AutoScroll=true,Padding=new Padding(15)};
         panel.Controls.Add(new Label(){Text="Varios filtros de comparación actúan con lógica AND.",AutoSize=true});
-        foreach(var c in new[]{_delete,_newer,_older,_hash,_size,_existing,_ask,_continueErrors,_antifrag,_fast,_adaptiveSsd,_adaptiveNvmeLarge,_adaptiveNvmeSmall,_hardwareProfile,_usbAlerts,_usbFirstTime,_small,_pipeline,_reuse,_durableSmall,_preallocate,_noConfirm})
+        foreach(var c in new[]{_delete,_newer,_older,_hash,_size,_existing,_ask,_continueErrors,_resume,_antifrag,_fast,_adaptiveSsd,_adaptiveNvmeLarge,_adaptiveNvmeSmall,_hardwareProfile,_usbAlerts,_usbFirstTime,_small,_pipeline,_reuse,_durableSmall,_preallocate,_noConfirm})
         {c.Margin=new Padding(8,8,0,6);panel.Controls.Add(c);}
         if(WindowsSetup.UserSimpleTier())
         {
@@ -620,6 +624,7 @@ internal sealed class SettingsWindow : Form
             _options.HashDifferent=_hash.Checked;_options.SizeDifferent=_size.Checked;_options.ExistingOnly=_existing.Checked;
             _options.AskOnConflict=_ask.Checked;_options.AntiFrag=_antifrag.Checked;_options.NoConfirm=_noConfirm.Checked;
             _options.ContinueOnError=_continueErrors.Checked;
+            _options.ResumeInterrupted=_resume.Checked;
             _options.FastTransfer=_fast.Checked;_options.Preallocate=_preallocate.Checked;
             _options.AdaptiveVerifiedSolidStateCopy=_adaptiveSsd.Checked;
             _options.AdaptiveNvmeSameDiskOverlapped=_adaptiveNvmeLarge.Checked;
