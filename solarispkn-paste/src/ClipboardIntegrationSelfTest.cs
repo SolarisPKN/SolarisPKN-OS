@@ -193,6 +193,22 @@ internal static class ClipboardIntegrationSelfTest
                       !File.Exists(resumeTarget),
                     "Interrupted copy retains a private partial and never publishes it");
             }
+            bool lockedRetryFailed=false;
+            var lockedResumeOptions=new PasteOptions { AutoHardwareProfile=false,
+                SmallFileOptimization=false,SmallFilePipeline=false,AskOnConflict=false,
+                ResumeInterrupted=true,MaxRetries=1 };
+            var lockedResumePlan=PasteEngine.Analyze(new[]{resumeSource},
+                resumeRoot,false,lockedResumeOptions);
+            using(var lockedInput=new FileStream(resumeSource,FileMode.Open,
+                FileAccess.ReadWrite,FileShare.None))
+            {
+                try { PasteQueue.Execute(lockedResumePlan); }
+                catch(IOException) {lockedRetryFailed=true;}
+            }
+            Check(lockedRetryFailed && File.Exists(partial) &&
+                  new FileInfo(partial).Length>=16L*1024*1024,
+                "Retryable locked-source failure preserves resume partial");
+
             long resumedBytes=-1;
             ResumeCopyEngine.CopyVerified(resumeRoot,resumeSource,partial,
                 sourceInfo.Length,sourceInfo.LastWriteTimeUtc.Ticks,null,
@@ -241,7 +257,7 @@ internal static class ClipboardIntegrationSelfTest
                 "Resume option refuses CUT and preserves source");
 
             File.WriteAllText(report,string.Join(Environment.NewLine,checks)+
-                Environment.NewLine+"Total: 25 PASS, 0 FAIL"+Environment.NewLine);
+                Environment.NewLine+"Total: 26 PASS, 0 FAIL"+Environment.NewLine);
         }
         catch(Exception e)
         {
