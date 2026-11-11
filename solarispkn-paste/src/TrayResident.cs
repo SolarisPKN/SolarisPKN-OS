@@ -166,8 +166,7 @@ internal sealed class TrayResident : ApplicationContext
                     _settingsReloadTimer.Stop();
                     _settingsReloadTimer.Start();
                 }));
-            }catch(InvalidOperationException){ /* tray exiting */ }
-            catch(ObjectDisposedException){ /* tray exiting */ }
+            }catch(InvalidOperationException){ /* tray exiting (also covers disposed) */ }
         }
         _settingsWatcher.Changed+=(_,_)=>ScheduleReload();
         _settingsWatcher.Created+=(_,_)=>ScheduleReload();
