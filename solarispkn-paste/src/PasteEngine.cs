@@ -17,6 +17,9 @@ internal sealed class PasteOptions
     public bool NoConfirm { get; set; }
     public bool AntiFrag { get; set; } = true;
     public bool AskOnConflict { get; set; } = true;
+    // Opt-in: keep copying independent files after a recoverable I/O error.
+    // Forbidden for CUT and orphan deletion. No source is removed on failure.
+    public bool ContinueOnError { get; set; } = false;
     public bool FastTransfer { get; set; } = true;
     // Pure presentation switch. Both modes use identical verified transfer logic.
     // UI: Visual 250 ms / Ultra 5000 ms; core I/O is identical in both.
@@ -343,6 +346,8 @@ internal static class PasteEngine
     public static string Execute(PastePlan plan, Action<string>? progress=null,
         CancellationToken cancel=default, TransferProgress? metrics=null)
     {
+        if(plan.Options.ContinueOnError && (plan.Cut || plan.Options.DeleteOrphans))
+            throw new InvalidOperationException("Continuar ante errores no se permite con Cortar ni Borrar huérfanos.");
         var actions=plan.Items.Where(x=>x.Kind!=WorkKind.Skip).ToList();
         // No realizar modificación alguna si el escenario cambió.
         foreach(var x in actions) { cancel.ThrowIfCancellationRequested(); Recheck(x); }
@@ -377,6 +382,7 @@ internal static class PasteEngine
         var createdDirs=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var readAheadCache=new Dictionary<string,bool>(StringComparer.OrdinalIgnoreCase);
         int writes=0,deletes=0;
+        var failures=new List<string>();
         try {
             var copies=actions.Where(x=>x.Kind is WorkKind.New or WorkKind.Update).ToArray();
             // A same-volume CUT of regular new files can be an NTFS directory
@@ -502,14 +508,16 @@ internal static class PasteEngine
                          .FirstOrDefault(v=>v.Present && v.Root==storage.Root))==
                          TransferHardwarePolicy.Media.Solid)) &&
                 plan.Options.SmallFilePipeline && !plan.Options.StrictSmallFileDurability &&
-                !plan.Cut && !plan.Options.DeleteOrphans && smallCopies.Length>=128 &&
+                !plan.Cut && !plan.Options.DeleteOrphans &&
+                !plan.Options.ContinueOnError && smallCopies.Length>=128 &&
                 actions.All(x=>x.Kind==WorkKind.New) &&
                 !storage.Rotational &&
                 !sourceSharesDestinationHdd;
             bool sameHddBatch=plan.Options.SameHddBatchExperimental &&
                 plan.Options.FastTransfer && plan.Options.SmallFileOptimization &&
                 !plan.Options.StrictSmallFileDurability &&
-                !plan.Cut && !plan.Options.DeleteOrphans && smallCopies.Length>=128 &&
+                !plan.Cut && !plan.Options.DeleteOrphans &&
+                !plan.Options.ContinueOnError && smallCopies.Length>=128 &&
                 actions.All(x=>x.Kind==WorkKind.New) && storage.Rotational &&
                 sourceSharesDestinationHdd &&
                 copies.Select(x=>Path.GetPathRoot(x.Source!)??x.Source!)
@@ -550,6 +558,8 @@ internal static class PasteEngine
                 : copies)
             {
                 cancel.ThrowIfCancellationRequested();
+                try
+                {
                 metrics?.BeginFile(x.RelativePath);
                 progress?.Invoke("Copiando: "+x.RelativePath);
                 string destinationDir=Path.GetDirectoryName(x.Destination)!;
@@ -694,6 +704,17 @@ internal static class PasteEngine
                 writes++;
                 Record("WRITE",x);
                 metrics?.Completed(x);
+                }
+                catch(Exception error) when(plan.Options.ContinueOnError &&
+                    error is IOException or UnauthorizedAccessException)
+                {
+                    // A failed destination is never published: all copies use
+                    // staging + verification before File.Move. Keep source intact.
+                    failures.Add(x.RelativePath+" ("+error.GetType().Name+")");
+                    Record("FAILED",x);
+                    journal.WriteLine("REASON "+error.GetType().Name+" "+error.Message);
+                    progress?.Invoke("Falló y se omitió: "+x.RelativePath);
+                }
             }
             // Solo tras comprobar que se copiaron todas las acciones.
             foreach(var x in actions.Where(x=>x.Kind==WorkKind.DeleteOrphan))
@@ -719,7 +740,10 @@ internal static class PasteEngine
             }
             journal.Flush();
             metrics?.Finished();
-            return $"Operación completada. Copiados: {writes}. Huérfanos a Papelera: {deletes}. Registro: {logfile}";
+            return failures.Count==0
+                ? $"Operación completada. Copiados: {writes}. Huérfanos a Papelera: {deletes}. Registro: {logfile}"
+                : $"OPERACIÓN PARCIAL: {writes} copiados, {failures.Count} fallidos (sin eliminar originales). "+
+                  $"Consultá el registro: {logfile}";
         } catch(Exception e) {
             journal.WriteLine("ERROR "+e.GetType().Name+" "+e.Message);
             journal.Flush();

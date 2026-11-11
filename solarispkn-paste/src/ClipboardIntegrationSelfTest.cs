@@ -118,8 +118,46 @@ internal static class ClipboardIntegrationSelfTest
             catch(InvalidOperationException) {rejected=true;}
             Check(rejected,"Missing clipboard files provide a clear error");
 
+            // Opt-in recovery: simulate a locked file in a synthetic sandbox.
+            // A failure must not poison independent copies or delete sources.
+            string partialSource=Path.Combine(temp,"partial-input");
+            string partialTarget=Path.Combine(temp,"partial-output");
+            Directory.CreateDirectory(partialSource);
+            Directory.CreateDirectory(partialTarget);
+            string blocked=Path.Combine(partialSource,"01-locked.txt");
+            string healthy=Path.Combine(partialSource,"02-good.txt");
+            File.WriteAllText(blocked,"keep locked original");
+            File.WriteAllText(healthy,"copy healthy original");
+            var recoveryOptions=new PasteOptions { AutoHardwareProfile=false,
+                SmallFileOptimization=false,SmallFilePipeline=false,
+                AskOnConflict=false,ContinueOnError=true,MaxRetries=0 };
+            var partialPlan=PasteEngine.Analyze(new[]{blocked,healthy},
+                partialTarget,false,recoveryOptions);
+            string partialReport;
+            using(var hold=new FileStream(blocked,FileMode.Open,FileAccess.ReadWrite,FileShare.None))
+                partialReport=PasteQueue.Execute(partialPlan);
+            Check(partialReport.Contains("OPERACIÓN PARCIAL",StringComparison.Ordinal),
+                "Partial copy reports failures instead of false success");
+            Check(File.ReadAllText(Path.Combine(partialTarget,"02-good.txt"))==
+                    "copy healthy original" && !File.Exists(
+                    Path.Combine(partialTarget,"01-locked.txt")),
+                "Partial copy publishes only verified successful files");
+            Check(File.ReadAllText(blocked)=="keep locked original" &&
+                  File.ReadAllText(healthy)=="copy healthy original",
+                "Partial copy never deletes original files");
+            bool disallowed=false;
+            try
+            {
+                var unsafePlan=PasteEngine.Analyze(new[]{healthy},
+                    partialTarget,true,recoveryOptions);
+                PasteQueue.Execute(unsafePlan);
+            }
+            catch(InvalidOperationException) {disallowed=true;}
+            Check(disallowed && File.Exists(healthy),
+                "Continue-on-error refuses CUT without altering source");
+
             File.WriteAllText(report,string.Join(Environment.NewLine,checks)+
-                Environment.NewLine+"Total: 15 PASS, 0 FAIL"+Environment.NewLine);
+                Environment.NewLine+"Total: 19 PASS, 0 FAIL"+Environment.NewLine);
         }
         catch(Exception e)
         {
