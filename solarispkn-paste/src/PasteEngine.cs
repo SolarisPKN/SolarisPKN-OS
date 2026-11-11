@@ -705,7 +705,9 @@ internal static class PasteEngine
                         }
                         catch(IOException e) when(attempt<Math.Clamp(plan.Options.MaxRetries,0,3))
                         {
-                            if(File.Exists(tmp))File.Delete(tmp);
+                            // Never discard a resumable partial after an I/O error.
+                            // Its verified prefix is checked again before any append.
+                            if(!resumeCopy && File.Exists(tmp))File.Delete(tmp);
                             progress?.Invoke($"Error transitorio en {x.RelativePath}: reintento {attempt+1} ({e.Message})");
                             Thread.Sleep(250*(attempt+1));
                         }
